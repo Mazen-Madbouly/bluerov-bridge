@@ -1,0 +1,5 @@
+[31mCMake Error at CMakeLists.txt:46 (find_library):
+  Could not find SIX_DOF_MODEL_LIBRARY using the following names:
+  underwater_vehicle_model
+
+[0m

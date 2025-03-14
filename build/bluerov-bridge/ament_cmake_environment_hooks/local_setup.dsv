@@ -1,0 +1,2 @@
+source;share/bluerov-bridge/environment/ament_prefix_path.sh
+source;share/bluerov-bridge/environment/path.sh

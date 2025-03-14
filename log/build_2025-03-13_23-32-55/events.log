@@ -1,0 +1,345 @@
+[0.000000] (-) TimerEvent: {}
+[0.000153] (bluerov-bridge) JobQueued: {'identifier': 'bluerov-bridge', 'dependencies': OrderedDict()}
+[0.000500] (bluerov-bridge) JobStarted: {'identifier': 'bluerov-bridge'}
+[0.015844] (bluerov-bridge) JobProgress: {'identifier': 'bluerov-bridge', 'progress': 'cmake'}
+[0.018072] (bluerov-bridge) JobProgress: {'identifier': 'bluerov-bridge', 'progress': 'build'}
+[0.018160] (bluerov-bridge) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/mazenmadbouly/bluerov-bridge/build/bluerov-bridge', '--', '-j12', '-l12'], 'cwd': '/home/mazenmadbouly/bluerov-bridge/build/bluerov-bridge', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'mazenmadbouly'), ('GIT_ASKPASS', '/home/mazenmadbouly/.cursor-server/bin/ae378be9dc2f5f1a6a1a220c6e25f9f03c8d4e10/extensions/git/dist/askpass.sh'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper/lib:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins::/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/home/mazenmadbouly/ardupilot/build:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:'), ('MOTD_SHOWN', 'update-motd'), ('HOME', '/home/mazenmadbouly'), ('OLDPWD', '/home/mazenmadbouly/bluerov-bridge'), ('TERM_PROGRAM_VERSION', '0.46.11'), ('VSCODE_IPC_HOOK_CLI', '/run/user/1000/vscode-ipc-68495f54-2943-434c-bc2f-48c728326b69.sock'), ('GAZEBO_MASTER_URI', 'http://localhost:11345'), ('ROS_PYTHON_VERSION', '3'), ('VSCODE_GIT_ASKPASS_MAIN', '/home/mazenmadbouly/.cursor-server/bin/ae378be9dc2f5f1a6a1a220c6e25f9f03c8d4e10/extensions/git/dist/askpass-main.js'), ('VSCODE_GIT_ASKPASS_NODE', '/home/mazenmadbouly/.cursor-server/bin/ae378be9dc2f5f1a6a1a220c6e25f9f03c8d4e10/node'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('WSL_DISTRO_NAME', 'Ubuntu-22.04'), ('WAYLAND_DISPLAY', 'wayland-0'), ('COLCON_PREFIX_PATH', '/home/mazenmadbouly/auv_core_ros2/auv_core_helper/install'), ('ROS_DISTRO', 'humble'), ('LOGNAME', 'mazenmadbouly'), ('NAME', 'DESKTOP-961FPEJ'), ('WSL_INTEROP', '/run/WSL/319_interop'), ('PULSE_SERVER', 'unix:/mnt/wslg/PulseServer'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('TERM', 'xterm-256color'), ('GAZEBO_MODEL_PATH', '/home/mazenmadbouly/bluerov_ros_playground/model:/usr/share/gazebo-11/models:/home/mazenmadbouly/bluerov_ros_playground/model:/usr/share/gazebo-11/models:'), ('ROS_LOCALHOST_ONLY', '0'), ('OGRE_RESOURCE_PATH', '/usr/lib/x86_64-linux-gnu/OGRE-1.9.0'), ('PATH', '/usr/lib/ccache:/home/mazenmadbouly/ardupilot/Tools/autotest:/opt/gcc-arm-none-eabi-10-2020-q4-major/bin:/home/mazenmadbouly/.local/bin:/home/mazenmadbouly/.cursor-server/bin/ae378be9dc2f5f1a6a1a220c6e25f9f03c8d4e10/bin/remote-cli:/usr/lib/ccache:/home/mazenmadbouly/ardupilot/Tools/autotest:/opt/gcc-arm-none-eabi-10-2020-q4-major/bin:/home/mazenmadbouly/.local/bin:/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/Users/Original Nassar/AppData/Local/Programs/cursor/resources/app/bin:/mnt/c/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.1/bin:/mnt/c/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.1/libnvvp:/mnt/c/Program Files (x86)/NVIDIA Corporation/PhysX/Common:/mnt/c/WINDOWS/system32:/mnt/c/WINDOWS:/mnt/c/WINDOWS/System32/Wbem:/mnt/c/WINDOWS/System32/WindowsPowerShell/v1.0/:/mnt/c/WINDOWS/System32/OpenSSH/:/mnt/d/ProgramFiles(x86)/MATLAB/R2023a/runtime/win64:/mnt/d/ProgramFiles(x86)/MATLAB/R2023a/bin:/mnt/c/Program Files/dotnet/:/mnt/c/Program Files (x86)/Windows Kits/8.1/Windows Performance Toolkit/:/mnt/c/Program Files/Microsoft SQL Server/150/Tools/Binn/:/mnt/c/Program Files/Git/cmd:/mnt/c/WINDOWS/system32:/mnt/c/WINDOWS:/mnt/c/WINDOWS/System32/Wbem:/mnt/c/WINDOWS/System32/WindowsPowerShell/v1.0/:/mnt/c/WINDOWS/System32/OpenSSH/:/mnt/c/Program Files/NVIDIA Corporation/Nsight Compute 2023.1.0/:/mnt/c/Program Files (x86)/ZED SDK/dependencies/freeglut_2.8/x64:/mnt/c/Program Files (x86)/ZED SDK/dependencies/glew-1.12.0/x64:/mnt/c/Program Files (x86)/ZED SDK/dependencies/opencv_3.1.0/x64:/mnt/c/Progr:/mnt/d/ProgramFiles(x86)/Microchip/xc8/v3.00/bin:/mnt/d/ProgramFiles(x86)/Microchip/xc-dsc/v3.20/bin:/mnt/d/ProgramFiles(x86)/Microchip/xc16/v2.10/bin:/mnt/c/Program Files/NVIDIA Corporation/NVIDIA app/NvDLISR:/mnt/c/Program Files (x86)/GNU Arm Embedded Toolchain/10 2021.10/bin:/mnt/d/ProgramFiles(x86)/Latex/texlive/2023/bin/windows:/mnt/c/Python38/Scripts/:/mnt/c/Users/Original Nassar/AppData/Local/Programs/Microsoft VS Code/bin:/mnt/c/Users/Original Nassar/AppData/Local/gitkraken/bin:/mnt/c/Users/Original Nassar/AppData/Local/Microsoft/WindowsApps:/mnt/c/Users/Original Nassar/AppData/Local/Programs/cursor/resources/app/bin:/snap/bin'), ('XDG_RUNTIME_DIR', '/run/user/1000/'), ('DISPLAY', ':0'), ('LANG', 'en_US.UTF-8'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('VSCODE_GIT_IPC_HANDLE', '/run/user/1000/vscode-git-bbe18df680.sock'), ('TERM_PROGRAM', 'vscode'), ('AMENT_PREFIX_PATH', '/home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper:/opt/ros/humble'), ('SHELL', '/bin/bash'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GAZEBO_RESOURCE_PATH', '/home/mazenmadbouly/bluerov_ros_playground/worlds:/usr/share/gazebo-11:/home/mazenmadbouly/bluerov_ros_playground/worlds:/usr/share/gazebo-11:'), ('GAZEBO_MODEL_DATABASE_URI', 'http://models.gazebosim.org'), ('VSCODE_GIT_ASKPASS_EXTRA_ARGS', ''), ('PWD', '/home/mazenmadbouly/bluerov-bridge/build/bluerov-bridge'), ('GAZEBO_PLUGIN_PATH', '/home/mazenmadbouly/ardupilot/build:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/home/mazenmadbouly/ardupilot/build:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:'), ('XDG_DATA_DIRS', '/usr/local/share:/usr/share:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper/local/lib/python3.10/dist-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('WSL2_GUI_APPS_ENABLED', '1'), ('HOSTTYPE', 'x86_64'), ('CMAKE_PREFIX_PATH', '/home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper:/opt/ros/humble'), ('WSLENV', 'VSCODE_WSL_EXT_LOCATION/up')]), 'shell': False}
+[0.099358] (-) TimerEvent: {}
+[0.108398] (bluerov-bridge) StdoutLine: {'line': b'-- Found ament_cmake: 1.3.11 (/opt/ros/humble/share/ament_cmake/cmake)\n'}
+[0.199493] (-) TimerEvent: {}
+[0.262119] (bluerov-bridge) StdoutLine: {'line': b'-- Override CMake install command with custom implementation using symlinks instead of copying resources\n'}
+[0.299383] (bluerov-bridge) StdoutLine: {'line': b'-- Found rclcpp: 16.0.11 (/opt/ros/humble/share/rclcpp/cmake)\n'}
+[0.299577] (-) TimerEvent: {}
+[0.399778] (-) TimerEvent: {}
+[0.500160] (-) TimerEvent: {}
+[0.547324] (bluerov-bridge) StdoutLine: {'line': b'-- Found rosidl_generator_c: 3.1.6 (/opt/ros/humble/share/rosidl_generator_c/cmake)\n'}
+[0.553489] (bluerov-bridge) StdoutLine: {'line': b'-- Found rosidl_adapter: 3.1.6 (/opt/ros/humble/share/rosidl_adapter/cmake)\n'}
+[0.567985] (bluerov-bridge) StdoutLine: {'line': b'-- Found rosidl_generator_cpp: 3.1.6 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)\n'}
+[0.588024] (bluerov-bridge) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[0.600345] (-) TimerEvent: {}
+[0.613122] (bluerov-bridge) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[0.683644] (bluerov-bridge) StdoutLine: {'line': b'-- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)\n'}
+[0.687597] (bluerov-bridge) StdoutLine: {'line': b'-- Found rmw_fastrtps_cpp: 6.2.7 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)\n'}
+[0.700451] (-) TimerEvent: {}
+[0.800757] (-) TimerEvent: {}
+[0.901074] (-) TimerEvent: {}
+[1.001383] (-) TimerEvent: {}
+[1.101697] (-) TimerEvent: {}
+[1.202001] (-) TimerEvent: {}
+[1.302354] (-) TimerEvent: {}
+[1.402747] (-) TimerEvent: {}
+[1.503075] (-) TimerEvent: {}
+[1.603396] (-) TimerEvent: {}
+[1.703744] (-) TimerEvent: {}
+[1.804091] (-) TimerEvent: {}
+[1.904456] (-) TimerEvent: {}
+[2.004774] (-) TimerEvent: {}
+[2.105169] (-) TimerEvent: {}
+[2.205478] (-) TimerEvent: {}
+[2.305802] (-) TimerEvent: {}
+[2.406126] (-) TimerEvent: {}
+[2.506400] (-) TimerEvent: {}
+[2.606709] (-) TimerEvent: {}
+[2.707043] (-) TimerEvent: {}
+[2.807400] (-) TimerEvent: {}
+[2.907737] (-) TimerEvent: {}
+[3.008033] (-) TimerEvent: {}
+[3.108348] (-) TimerEvent: {}
+[3.208661] (-) TimerEvent: {}
+[3.308970] (-) TimerEvent: {}
+[3.409262] (-) TimerEvent: {}
+[3.509637] (-) TimerEvent: {}
+[3.609930] (-) TimerEvent: {}
+[3.710251] (-) TimerEvent: {}
+[3.810604] (-) TimerEvent: {}
+[3.910926] (-) TimerEvent: {}
+[4.011270] (-) TimerEvent: {}
+[4.111582] (-) TimerEvent: {}
+[4.211907] (-) TimerEvent: {}
+[4.312456] (-) TimerEvent: {}
+[4.412781] (-) TimerEvent: {}
+[4.513112] (-) TimerEvent: {}
+[4.613444] (-) TimerEvent: {}
+[4.713743] (-) TimerEvent: {}
+[4.814060] (-) TimerEvent: {}
+[4.914399] (-) TimerEvent: {}
+[5.014722] (-) TimerEvent: {}
+[5.115063] (-) TimerEvent: {}
+[5.215405] (-) TimerEvent: {}
+[5.315698] (-) TimerEvent: {}
+[5.415993] (-) TimerEvent: {}
+[5.516307] (-) TimerEvent: {}
+[5.616640] (-) TimerEvent: {}
+[5.716968] (-) TimerEvent: {}
+[5.817389] (-) TimerEvent: {}
+[5.917714] (-) TimerEvent: {}
+[6.017965] (-) TimerEvent: {}
+[6.118271] (-) TimerEvent: {}
+[6.218624] (-) TimerEvent: {}
+[6.318935] (-) TimerEvent: {}
+[6.419249] (-) TimerEvent: {}
+[6.519609] (-) TimerEvent: {}
+[6.614651] (bluerov-bridge) StdoutLine: {'line': b"-- Using RMW implementation 'rmw_fastrtps_cpp' as default\n"}
+[6.619821] (-) TimerEvent: {}
+[6.720516] (-) TimerEvent: {}
+[6.730118] (bluerov-bridge) StdoutLine: {'line': b'-- Found visualization_msgs: 4.2.4 (/opt/ros/humble/share/visualization_msgs/cmake)\n'}
+[6.813265] (bluerov-bridge) StdoutLine: {'line': b'-- Found tf2_ros: 0.25.12 (/opt/ros/humble/share/tf2_ros/cmake)\n'}
+[6.820799] (-) TimerEvent: {}
+[6.921102] (-) TimerEvent: {}
+[6.977171] (bluerov-bridge) StdoutLine: {'line': b'-- Found auv_core_helper: 0.1.0 (/home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper/share/auv_core_helper/cmake)\n'}
+[7.005090] (bluerov-bridge) StdoutLine: {'line': b'-- Found tf2_geometry_msgs: 0.25.12 (/opt/ros/humble/share/tf2_geometry_msgs/cmake)\n'}
+[7.013478] (bluerov-bridge) StdoutLine: {'line': b'-- Found eigen3_cmake_module: 0.1.1 (/opt/ros/humble/share/eigen3_cmake_module/cmake)\n'}
+[7.015639] (bluerov-bridge) StdoutLine: {'line': b'-- Ensuring Eigen3 include directory is part of orocos-kdl CMake target\n'}
+[7.017803] (bluerov-bridge) StdoutLine: {'line': b'-- Found rclcpp_lifecycle: 16.0.11 (/opt/ros/humble/share/rclcpp_lifecycle/cmake)\n'}
+[7.021227] (-) TimerEvent: {}
+[7.049469] (bluerov-bridge) StdoutLine: {'line': b'-- Found nav_msgs: 4.2.4 (/opt/ros/humble/share/nav_msgs/cmake)\n'}
+[7.121348] (-) TimerEvent: {}
+[7.123096] (bluerov-bridge) StdoutLine: {'line': b'-- Found ament_lint_auto: 0.12.11 (/opt/ros/humble/share/ament_lint_auto/cmake)\n'}
+[7.211645] (bluerov-bridge) StdoutLine: {'line': b"-- Added test 'copyright' to check source files copyright and LICENSE\n"}
+[7.221538] (-) TimerEvent: {}
+[7.236900] (bluerov-bridge) StdoutLine: {'line': b"-- Added test 'cppcheck' to perform static code analysis on C / C++ code\n"}
+[7.237688] (bluerov-bridge) StdoutLine: {'line': b'-- Configured cppcheck include dirs: /home/mazenmadbouly/bluerov-bridge/include\n'}
+[7.237882] (bluerov-bridge) StdoutLine: {'line': b'-- Configured cppcheck exclude dirs and/or files: \n'}
+[7.262360] (bluerov-bridge) StdoutLine: {'line': b"-- Added test 'cpplint' to check C / C++ code against the Google style\n"}
+[7.262546] (bluerov-bridge) StdoutLine: {'line': b'-- Configured cpplint exclude dirs and/or files: \n'}
+[7.266195] (bluerov-bridge) StdoutLine: {'line': b"-- Added test 'flake8' to check Python code syntax and style conventions\n"}
+[7.272999] (bluerov-bridge) StdoutLine: {'line': b"-- Added test 'lint_cmake' to check CMake code style\n"}
+[7.277000] (bluerov-bridge) StdoutLine: {'line': b"-- Added test 'pep257' to check Python code against some of the docstring style conventions in PEP 257\n"}
+[7.300310] (bluerov-bridge) StdoutLine: {'line': b"-- Added test 'uncrustify' to check C / C++ code style\n"}
+[7.300495] (bluerov-bridge) StdoutLine: {'line': b'-- Configured uncrustify additional arguments: \n'}
+[7.304003] (bluerov-bridge) StdoutLine: {'line': b"-- Added test 'xmllint' to check XML markup files\n"}
+[7.307369] (bluerov-bridge) StdoutLine: {'line': b'-- Configuring done\n'}
+[7.321679] (-) TimerEvent: {}
+[7.422102] (-) TimerEvent: {}
+[7.452262] (bluerov-bridge) StdoutLine: {'line': b'-- Generating done\n'}
+[7.464225] (bluerov-bridge) StdoutLine: {'line': b'-- Build files have been written to: /home/mazenmadbouly/bluerov-bridge/build/bluerov-bridge\n'}
+[7.510450] (bluerov-bridge) StdoutLine: {'line': b'[ 66%] \x1b[32mBuilding CXX object CMakeFiles/bluerov_bridge_node.dir/src/bluerov_bridge_node.cpp.o\x1b[0m\n'}
+[7.510627] (bluerov-bridge) StdoutLine: {'line': b'[ 66%] \x1b[32mBuilding CXX object CMakeFiles/bluerov_bridge_node.dir/src/bluerov-bridge/bluerov_bridge.cpp.o\x1b[0m\n'}
+[7.522291] (-) TimerEvent: {}
+[7.622602] (-) TimerEvent: {}
+[7.722926] (-) TimerEvent: {}
+[7.823295] (-) TimerEvent: {}
+[7.923684] (-) TimerEvent: {}
+[8.024069] (-) TimerEvent: {}
+[8.124567] (-) TimerEvent: {}
+[8.224919] (-) TimerEvent: {}
+[8.325280] (-) TimerEvent: {}
+[8.425620] (-) TimerEvent: {}
+[8.525925] (-) TimerEvent: {}
+[8.626256] (-) TimerEvent: {}
+[8.726577] (-) TimerEvent: {}
+[8.826939] (-) TimerEvent: {}
+[8.927265] (-) TimerEvent: {}
+[9.027573] (-) TimerEvent: {}
+[9.127927] (-) TimerEvent: {}
+[9.228290] (-) TimerEvent: {}
+[9.328631] (-) TimerEvent: {}
+[9.428917] (-) TimerEvent: {}
+[9.529299] (-) TimerEvent: {}
+[9.629658] (-) TimerEvent: {}
+[9.729972] (-) TimerEvent: {}
+[9.830291] (-) TimerEvent: {}
+[9.930686] (-) TimerEvent: {}
+[10.031042] (-) TimerEvent: {}
+[10.131391] (-) TimerEvent: {}
+[10.231803] (-) TimerEvent: {}
+[10.332202] (-) TimerEvent: {}
+[10.432564] (-) TimerEvent: {}
+[10.532942] (-) TimerEvent: {}
+[10.633327] (-) TimerEvent: {}
+[10.733711] (-) TimerEvent: {}
+[10.834063] (-) TimerEvent: {}
+[10.934423] (-) TimerEvent: {}
+[11.034782] (-) TimerEvent: {}
+[11.135199] (-) TimerEvent: {}
+[11.235578] (-) TimerEvent: {}
+[11.335926] (-) TimerEvent: {}
+[11.436265] (-) TimerEvent: {}
+[11.536624] (-) TimerEvent: {}
+[11.636974] (-) TimerEvent: {}
+[11.737323] (-) TimerEvent: {}
+[11.837741] (-) TimerEvent: {}
+[11.938201] (-) TimerEvent: {}
+[12.038601] (-) TimerEvent: {}
+[12.139008] (-) TimerEvent: {}
+[12.239377] (-) TimerEvent: {}
+[12.339729] (-) TimerEvent: {}
+[12.440111] (-) TimerEvent: {}
+[12.540530] (-) TimerEvent: {}
+[12.640956] (-) TimerEvent: {}
+[12.741371] (-) TimerEvent: {}
+[12.841727] (-) TimerEvent: {}
+[12.942148] (-) TimerEvent: {}
+[13.042509] (-) TimerEvent: {}
+[13.142838] (-) TimerEvent: {}
+[13.243156] (-) TimerEvent: {}
+[13.343543] (-) TimerEvent: {}
+[13.443942] (-) TimerEvent: {}
+[13.544307] (-) TimerEvent: {}
+[13.644683] (-) TimerEvent: {}
+[13.745027] (-) TimerEvent: {}
+[13.845368] (-) TimerEvent: {}
+[13.945677] (-) TimerEvent: {}
+[14.046038] (-) TimerEvent: {}
+[14.146448] (-) TimerEvent: {}
+[14.246940] (-) TimerEvent: {}
+[14.347302] (-) TimerEvent: {}
+[14.447680] (-) TimerEvent: {}
+[14.548105] (-) TimerEvent: {}
+[14.648454] (-) TimerEvent: {}
+[14.748801] (-) TimerEvent: {}
+[14.849235] (-) TimerEvent: {}
+[14.949711] (-) TimerEvent: {}
+[15.050120] (-) TimerEvent: {}
+[15.150535] (-) TimerEvent: {}
+[15.250898] (-) TimerEvent: {}
+[15.351301] (-) TimerEvent: {}
+[15.451653] (-) TimerEvent: {}
+[15.551972] (-) TimerEvent: {}
+[15.652304] (-) TimerEvent: {}
+[15.752760] (-) TimerEvent: {}
+[15.853153] (-) TimerEvent: {}
+[15.953470] (-) TimerEvent: {}
+[16.053839] (-) TimerEvent: {}
+[16.154133] (-) TimerEvent: {}
+[16.254521] (-) TimerEvent: {}
+[16.354909] (-) TimerEvent: {}
+[16.455307] (-) TimerEvent: {}
+[16.555758] (-) TimerEvent: {}
+[16.656115] (-) TimerEvent: {}
+[16.756436] (-) TimerEvent: {}
+[16.856808] (-) TimerEvent: {}
+[16.957190] (-) TimerEvent: {}
+[17.057537] (-) TimerEvent: {}
+[17.157893] (-) TimerEvent: {}
+[17.258280] (-) TimerEvent: {}
+[17.358671] (-) TimerEvent: {}
+[17.459008] (-) TimerEvent: {}
+[17.559288] (-) TimerEvent: {}
+[17.659634] (-) TimerEvent: {}
+[17.760021] (-) TimerEvent: {}
+[17.860316] (-) TimerEvent: {}
+[17.960741] (-) TimerEvent: {}
+[18.061188] (-) TimerEvent: {}
+[18.161578] (-) TimerEvent: {}
+[18.261925] (-) TimerEvent: {}
+[18.362297] (-) TimerEvent: {}
+[18.462738] (-) TimerEvent: {}
+[18.563138] (-) TimerEvent: {}
+[18.663506] (-) TimerEvent: {}
+[18.763943] (-) TimerEvent: {}
+[18.864333] (-) TimerEvent: {}
+[18.964682] (-) TimerEvent: {}
+[19.064995] (-) TimerEvent: {}
+[19.165325] (-) TimerEvent: {}
+[19.265679] (-) TimerEvent: {}
+[19.366019] (-) TimerEvent: {}
+[19.466400] (-) TimerEvent: {}
+[19.566765] (-) TimerEvent: {}
+[19.667027] (-) TimerEvent: {}
+[19.767338] (-) TimerEvent: {}
+[19.867679] (-) TimerEvent: {}
+[19.968015] (-) TimerEvent: {}
+[20.068382] (-) TimerEvent: {}
+[20.168832] (-) TimerEvent: {}
+[20.269316] (-) TimerEvent: {}
+[20.369646] (-) TimerEvent: {}
+[20.470038] (-) TimerEvent: {}
+[20.570374] (-) TimerEvent: {}
+[20.670683] (-) TimerEvent: {}
+[20.771004] (-) TimerEvent: {}
+[20.871384] (-) TimerEvent: {}
+[20.971866] (-) TimerEvent: {}
+[21.072346] (-) TimerEvent: {}
+[21.172681] (-) TimerEvent: {}
+[21.273023] (-) TimerEvent: {}
+[21.373328] (-) TimerEvent: {}
+[21.473633] (-) TimerEvent: {}
+[21.574023] (-) TimerEvent: {}
+[21.674441] (-) TimerEvent: {}
+[21.774793] (-) TimerEvent: {}
+[21.875187] (-) TimerEvent: {}
+[21.983291] (-) TimerEvent: {}
+[22.083765] (-) TimerEvent: {}
+[22.184095] (-) TimerEvent: {}
+[22.284460] (-) TimerEvent: {}
+[22.384793] (-) TimerEvent: {}
+[22.485074] (-) TimerEvent: {}
+[22.585394] (-) TimerEvent: {}
+[22.685761] (-) TimerEvent: {}
+[22.786154] (-) TimerEvent: {}
+[22.886547] (-) TimerEvent: {}
+[22.986901] (-) TimerEvent: {}
+[23.087272] (-) TimerEvent: {}
+[23.187561] (-) TimerEvent: {}
+[23.287885] (-) TimerEvent: {}
+[23.388219] (-) TimerEvent: {}
+[23.488559] (-) TimerEvent: {}
+[23.588949] (-) TimerEvent: {}
+[23.689383] (-) TimerEvent: {}
+[23.789637] (-) TimerEvent: {}
+[23.889964] (-) TimerEvent: {}
+[23.990305] (-) TimerEvent: {}
+[24.090635] (-) TimerEvent: {}
+[24.191032] (-) TimerEvent: {}
+[24.291557] (-) TimerEvent: {}
+[24.391941] (-) TimerEvent: {}
+[24.492305] (-) TimerEvent: {}
+[24.592635] (-) TimerEvent: {}
+[24.658138] (bluerov-bridge) StdoutLine: {'line': b'[100%] \x1b[32m\x1b[1mLinking CXX executable bluerov_bridge_node\x1b[0m\n'}
+[24.692800] (-) TimerEvent: {}
+[24.793128] (-) TimerEvent: {}
+[24.893485] (-) TimerEvent: {}
+[24.993842] (-) TimerEvent: {}
+[25.094281] (-) TimerEvent: {}
+[25.194776] (-) TimerEvent: {}
+[25.295147] (-) TimerEvent: {}
+[25.395621] (-) TimerEvent: {}
+[25.495984] (-) TimerEvent: {}
+[25.596476] (-) TimerEvent: {}
+[25.696995] (-) TimerEvent: {}
+[25.797388] (-) TimerEvent: {}
+[25.897786] (-) TimerEvent: {}
+[25.998114] (-) TimerEvent: {}
+[26.098400] (-) TimerEvent: {}
+[26.198724] (-) TimerEvent: {}
+[26.299138] (-) TimerEvent: {}
+[26.399695] (-) TimerEvent: {}
+[26.500028] (-) TimerEvent: {}
+[26.600357] (-) TimerEvent: {}
+[26.700731] (-) TimerEvent: {}
+[26.801053] (-) TimerEvent: {}
+[26.901505] (-) TimerEvent: {}
+[27.001961] (-) TimerEvent: {}
+[27.102298] (-) TimerEvent: {}
+[27.202652] (-) TimerEvent: {}
+[27.302996] (-) TimerEvent: {}
+[27.403342] (-) TimerEvent: {}
+[27.477850] (bluerov-bridge) StdoutLine: {'line': b'[100%] Built target bluerov_bridge_node\n'}
+[27.489607] (bluerov-bridge) CommandEnded: {'returncode': 0}
+[27.491769] (bluerov-bridge) JobProgress: {'identifier': 'bluerov-bridge', 'progress': 'install'}
+[27.501516] (bluerov-bridge) Command: {'cmd': ['/usr/bin/cmake', '--install', '/home/mazenmadbouly/bluerov-bridge/build/bluerov-bridge'], 'cwd': '/home/mazenmadbouly/bluerov-bridge/build/bluerov-bridge', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'mazenmadbouly'), ('GIT_ASKPASS', '/home/mazenmadbouly/.cursor-server/bin/ae378be9dc2f5f1a6a1a220c6e25f9f03c8d4e10/extensions/git/dist/askpass.sh'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper/lib:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins::/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/home/mazenmadbouly/ardupilot/build:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:'), ('MOTD_SHOWN', 'update-motd'), ('HOME', '/home/mazenmadbouly'), ('OLDPWD', '/home/mazenmadbouly/bluerov-bridge'), ('TERM_PROGRAM_VERSION', '0.46.11'), ('VSCODE_IPC_HOOK_CLI', '/run/user/1000/vscode-ipc-68495f54-2943-434c-bc2f-48c728326b69.sock'), ('GAZEBO_MASTER_URI', 'http://localhost:11345'), ('ROS_PYTHON_VERSION', '3'), ('VSCODE_GIT_ASKPASS_MAIN', '/home/mazenmadbouly/.cursor-server/bin/ae378be9dc2f5f1a6a1a220c6e25f9f03c8d4e10/extensions/git/dist/askpass-main.js'), ('VSCODE_GIT_ASKPASS_NODE', '/home/mazenmadbouly/.cursor-server/bin/ae378be9dc2f5f1a6a1a220c6e25f9f03c8d4e10/node'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('WSL_DISTRO_NAME', 'Ubuntu-22.04'), ('WAYLAND_DISPLAY', 'wayland-0'), ('COLCON_PREFIX_PATH', '/home/mazenmadbouly/auv_core_ros2/auv_core_helper/install'), ('ROS_DISTRO', 'humble'), ('LOGNAME', 'mazenmadbouly'), ('NAME', 'DESKTOP-961FPEJ'), ('WSL_INTEROP', '/run/WSL/319_interop'), ('PULSE_SERVER', 'unix:/mnt/wslg/PulseServer'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('TERM', 'xterm-256color'), ('GAZEBO_MODEL_PATH', '/home/mazenmadbouly/bluerov_ros_playground/model:/usr/share/gazebo-11/models:/home/mazenmadbouly/bluerov_ros_playground/model:/usr/share/gazebo-11/models:'), ('ROS_LOCALHOST_ONLY', '0'), ('OGRE_RESOURCE_PATH', '/usr/lib/x86_64-linux-gnu/OGRE-1.9.0'), ('PATH', '/usr/lib/ccache:/home/mazenmadbouly/ardupilot/Tools/autotest:/opt/gcc-arm-none-eabi-10-2020-q4-major/bin:/home/mazenmadbouly/.local/bin:/home/mazenmadbouly/.cursor-server/bin/ae378be9dc2f5f1a6a1a220c6e25f9f03c8d4e10/bin/remote-cli:/usr/lib/ccache:/home/mazenmadbouly/ardupilot/Tools/autotest:/opt/gcc-arm-none-eabi-10-2020-q4-major/bin:/home/mazenmadbouly/.local/bin:/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/Users/Original Nassar/AppData/Local/Programs/cursor/resources/app/bin:/mnt/c/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.1/bin:/mnt/c/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.1/libnvvp:/mnt/c/Program Files (x86)/NVIDIA Corporation/PhysX/Common:/mnt/c/WINDOWS/system32:/mnt/c/WINDOWS:/mnt/c/WINDOWS/System32/Wbem:/mnt/c/WINDOWS/System32/WindowsPowerShell/v1.0/:/mnt/c/WINDOWS/System32/OpenSSH/:/mnt/d/ProgramFiles(x86)/MATLAB/R2023a/runtime/win64:/mnt/d/ProgramFiles(x86)/MATLAB/R2023a/bin:/mnt/c/Program Files/dotnet/:/mnt/c/Program Files (x86)/Windows Kits/8.1/Windows Performance Toolkit/:/mnt/c/Program Files/Microsoft SQL Server/150/Tools/Binn/:/mnt/c/Program Files/Git/cmd:/mnt/c/WINDOWS/system32:/mnt/c/WINDOWS:/mnt/c/WINDOWS/System32/Wbem:/mnt/c/WINDOWS/System32/WindowsPowerShell/v1.0/:/mnt/c/WINDOWS/System32/OpenSSH/:/mnt/c/Program Files/NVIDIA Corporation/Nsight Compute 2023.1.0/:/mnt/c/Program Files (x86)/ZED SDK/dependencies/freeglut_2.8/x64:/mnt/c/Program Files (x86)/ZED SDK/dependencies/glew-1.12.0/x64:/mnt/c/Program Files (x86)/ZED SDK/dependencies/opencv_3.1.0/x64:/mnt/c/Progr:/mnt/d/ProgramFiles(x86)/Microchip/xc8/v3.00/bin:/mnt/d/ProgramFiles(x86)/Microchip/xc-dsc/v3.20/bin:/mnt/d/ProgramFiles(x86)/Microchip/xc16/v2.10/bin:/mnt/c/Program Files/NVIDIA Corporation/NVIDIA app/NvDLISR:/mnt/c/Program Files (x86)/GNU Arm Embedded Toolchain/10 2021.10/bin:/mnt/d/ProgramFiles(x86)/Latex/texlive/2023/bin/windows:/mnt/c/Python38/Scripts/:/mnt/c/Users/Original Nassar/AppData/Local/Programs/Microsoft VS Code/bin:/mnt/c/Users/Original Nassar/AppData/Local/gitkraken/bin:/mnt/c/Users/Original Nassar/AppData/Local/Microsoft/WindowsApps:/mnt/c/Users/Original Nassar/AppData/Local/Programs/cursor/resources/app/bin:/snap/bin'), ('XDG_RUNTIME_DIR', '/run/user/1000/'), ('DISPLAY', ':0'), ('LANG', 'en_US.UTF-8'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('VSCODE_GIT_IPC_HANDLE', '/run/user/1000/vscode-git-bbe18df680.sock'), ('TERM_PROGRAM', 'vscode'), ('AMENT_PREFIX_PATH', '/home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper:/opt/ros/humble'), ('SHELL', '/bin/bash'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GAZEBO_RESOURCE_PATH', '/home/mazenmadbouly/bluerov_ros_playground/worlds:/usr/share/gazebo-11:/home/mazenmadbouly/bluerov_ros_playground/worlds:/usr/share/gazebo-11:'), ('GAZEBO_MODEL_DATABASE_URI', 'http://models.gazebosim.org'), ('VSCODE_GIT_ASKPASS_EXTRA_ARGS', ''), ('PWD', '/home/mazenmadbouly/bluerov-bridge/build/bluerov-bridge'), ('GAZEBO_PLUGIN_PATH', '/home/mazenmadbouly/ardupilot/build:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/home/mazenmadbouly/ardupilot/build:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:'), ('XDG_DATA_DIRS', '/usr/local/share:/usr/share:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper/local/lib/python3.10/dist-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('WSL2_GUI_APPS_ENABLED', '1'), ('HOSTTYPE', 'x86_64'), ('CMAKE_PREFIX_PATH', '/home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper:/opt/ros/humble'), ('WSLENV', 'VSCODE_WSL_EXT_LOCATION/up')]), 'shell': False}
+[27.503461] (-) TimerEvent: {}
+[27.509718] (bluerov-bridge) StdoutLine: {'line': b'-- Install configuration: "Debug"\n'}
+[27.510148] (bluerov-bridge) StdoutLine: {'line': b'-- Execute custom install script\n'}
+[27.512087] (bluerov-bridge) StdoutLine: {'line': b'-- Symlinking: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/lib/bluerov-bridge/bluerov_bridge_node\n'}
+[27.523027] (bluerov-bridge) StdoutLine: {'line': b'-- Symlinking: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/include//bluerov-bridge/bluerov_bridge.hpp\n'}
+[27.533231] (bluerov-bridge) StdoutLine: {'line': b'-- Symlinking: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/ament_index/resource_index/package_run_dependencies/bluerov-bridge\n'}
+[27.542984] (bluerov-bridge) StdoutLine: {'line': b'-- Symlinking: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/ament_index/resource_index/parent_prefix_path/bluerov-bridge\n'}
+[27.551680] (bluerov-bridge) StdoutLine: {'line': b'-- Symlinking: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/environment/ament_prefix_path.sh\n'}
+[27.560595] (bluerov-bridge) StdoutLine: {'line': b'-- Symlinking: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/environment/ament_prefix_path.dsv\n'}
+[27.568674] (bluerov-bridge) StdoutLine: {'line': b'-- Symlinking: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/environment/path.sh\n'}
+[27.578233] (bluerov-bridge) StdoutLine: {'line': b'-- Symlinking: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/environment/path.dsv\n'}
+[27.586817] (bluerov-bridge) StdoutLine: {'line': b'-- Symlinking: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/local_setup.bash\n'}
+[27.595268] (bluerov-bridge) StdoutLine: {'line': b'-- Symlinking: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/local_setup.sh\n'}
+[27.603582] (-) TimerEvent: {}
+[27.604022] (bluerov-bridge) StdoutLine: {'line': b'-- Symlinking: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/local_setup.zsh\n'}
+[27.612214] (bluerov-bridge) StdoutLine: {'line': b'-- Symlinking: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/local_setup.dsv\n'}
+[27.621105] (bluerov-bridge) StdoutLine: {'line': b'-- Symlinking: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/package.dsv\n'}
+[27.630172] (bluerov-bridge) StdoutLine: {'line': b'-- Symlinking: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/ament_index/resource_index/packages/bluerov-bridge\n'}
+[27.640568] (bluerov-bridge) StdoutLine: {'line': b'-- Symlinking: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/cmake/bluerov-bridgeConfig.cmake\n'}
+[27.648934] (bluerov-bridge) StdoutLine: {'line': b'-- Symlinking: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/cmake/bluerov-bridgeConfig-version.cmake\n'}
+[27.657662] (bluerov-bridge) StdoutLine: {'line': b'-- Symlinking: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/package.xml\n'}
+[27.667202] (bluerov-bridge) CommandEnded: {'returncode': 0}
+[27.695372] (bluerov-bridge) JobEnded: {'identifier': 'bluerov-bridge', 'rc': 0}
+[27.696969] (-) EventReactorShutdown: {}
