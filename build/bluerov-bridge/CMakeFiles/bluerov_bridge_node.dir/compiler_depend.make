@@ -699,14 +699,14 @@ CMakeFiles/bluerov_bridge_node.dir/src/bluerov-bridge/bluerov_bridge.cpp.o: ../.
   /opt/ros/humble/include/std_msgs/std_msgs/msg/detail/string__traits.hpp \
   /opt/ros/humble/include/std_msgs/std_msgs/msg/detail/string__type_support.hpp \
   /opt/ros/humble/include/std_msgs/std_msgs/msg/rosidl_generator_cpp__visibility_control.hpp \
-  /home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/pose_stamped.hpp \
-  /home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/detail/pose_stamped__struct.hpp \
+  /home/mazenmadbouly/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/pose_stamped.hpp \
+  /home/mazenmadbouly/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/detail/pose_stamped__struct.hpp \
   /opt/ros/humble/include/std_msgs/std_msgs/msg/detail/header__struct.hpp \
-  /home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/detail/pose_stamped__builder.hpp \
-  /home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/detail/pose_stamped__traits.hpp \
+  /home/mazenmadbouly/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/detail/pose_stamped__builder.hpp \
+  /home/mazenmadbouly/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/detail/pose_stamped__traits.hpp \
   /opt/ros/humble/include/std_msgs/std_msgs/msg/detail/header__traits.hpp \
-  /home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/detail/pose_stamped__type_support.hpp \
-  /home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/rosidl_generator_cpp__visibility_control.hpp \
+  /home/mazenmadbouly/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/detail/pose_stamped__type_support.hpp \
+  /home/mazenmadbouly/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/rosidl_generator_cpp__visibility_control.hpp \
   /usr/include/eigen3/Eigen/Dense \
   /usr/include/eigen3/Eigen/Core \
   /usr/include/eigen3/Eigen/src/Core/util/DisableStupidWarnings.h \
@@ -1874,14 +1874,14 @@ CMakeFiles/bluerov_bridge_node.dir/src/bluerov_bridge_node.cpp.o: ../../src/blue
   /opt/ros/humble/include/std_msgs/std_msgs/msg/detail/string__traits.hpp \
   /opt/ros/humble/include/std_msgs/std_msgs/msg/detail/string__type_support.hpp \
   /opt/ros/humble/include/std_msgs/std_msgs/msg/rosidl_generator_cpp__visibility_control.hpp \
-  /home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/pose_stamped.hpp \
-  /home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/detail/pose_stamped__struct.hpp \
+  /home/mazenmadbouly/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/pose_stamped.hpp \
+  /home/mazenmadbouly/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/detail/pose_stamped__struct.hpp \
   /opt/ros/humble/include/std_msgs/std_msgs/msg/detail/header__struct.hpp \
-  /home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/detail/pose_stamped__builder.hpp \
-  /home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/detail/pose_stamped__traits.hpp \
+  /home/mazenmadbouly/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/detail/pose_stamped__builder.hpp \
+  /home/mazenmadbouly/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/detail/pose_stamped__traits.hpp \
   /opt/ros/humble/include/std_msgs/std_msgs/msg/detail/header__traits.hpp \
-  /home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/detail/pose_stamped__type_support.hpp \
-  /home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/rosidl_generator_cpp__visibility_control.hpp \
+  /home/mazenmadbouly/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/detail/pose_stamped__type_support.hpp \
+  /home/mazenmadbouly/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/rosidl_generator_cpp__visibility_control.hpp \
   /usr/include/eigen3/Eigen/Dense \
   /usr/include/eigen3/Eigen/Core \
   /usr/include/eigen3/Eigen/src/Core/util/DisableStupidWarnings.h \
@@ -2800,6 +2800,12 @@ CMakeFiles/bluerov_bridge_node.dir/src/bluerov_bridge_node.cpp.o: ../../src/blue
 
 /usr/include/c++/11/type_traits:
 
+/usr/include/c++/11/tr1/modified_bessel_func.tcc:
+
+/usr/include/c++/11/bits/ostream.tcc:
+
+/opt/ros/humble/include/rclcpp/rclcpp/create_generic_publisher.hpp:
+
 /opt/ros/humble/include/rmw/rmw/localhost.h:
 
 /opt/ros/humble/include/rclcpp/rclcpp/detail/resolve_enable_topic_statistics.hpp:
@@ -2940,6 +2946,10 @@ CMakeFiles/bluerov_bridge_node.dir/src/bluerov_bridge_node.cpp.o: ../../src/blue
 
 /usr/include/c++/11/bits/exception_ptr.h:
 
+/home/mazenmadbouly/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/pose_stamped.hpp:
+
+/usr/include/c++/11/cstring:
+
 /usr/include/c++/11/bits/atomic_futex.h:
 
 /usr/include/eigen3/Eigen/src/Geometry/ParametrizedLine.h:
@@ -2969,8 +2979,6 @@ CMakeFiles/bluerov_bridge_node.dir/src/bluerov_bridge_node.cpp.o: ../../src/blue
 /opt/ros/humble/include/rclcpp/rclcpp/subscription_options.hpp:
 
 /opt/ros/humble/include/rclcpp/rclcpp/wait_set_policies/detail/synchronization_policy_common.hpp:
-
-/home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/detail/pose_stamped__builder.hpp:
 
 /home/mazenmadbouly/mavlink/generated/include/mavlink/v2.0/common/mavlink_msg_global_position_int.h:
 
@@ -3136,8 +3144,6 @@ CMakeFiles/bluerov_bridge_node.dir/src/bluerov_bridge_node.cpp.o: ../../src/blue
 
 /usr/include/x86_64-linux-gnu/bits/typesizes.h:
 
-/opt/ros/humble/include/rcl_interfaces/rcl_interfaces/msg/detail/parameter__builder.hpp:
-
 /home/mazenmadbouly/mavlink/generated/include/mavlink/v2.0/common/mavlink_msg_command_int.h:
 
 /usr/include/c++/11/bits/shared_ptr_base.h:
@@ -3230,6 +3236,8 @@ CMakeFiles/bluerov_bridge_node.dir/src/bluerov_bridge_node.cpp.o: ../../src/blue
 
 /opt/ros/humble/include/rcl_interfaces/rcl_interfaces/msg/detail/parameter_event__struct.hpp:
 
+/home/mazenmadbouly/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/detail/pose_stamped__builder.hpp:
+
 /usr/include/features.h:
 
 /usr/include/eigen3/Eigen/src/Geometry/Hyperplane.h:
@@ -3267,6 +3275,8 @@ CMakeFiles/bluerov_bridge_node.dir/src/bluerov_bridge_node.cpp.o: ../../src/blue
 /usr/include/x86_64-linux-gnu/bits/time64.h:
 
 /opt/ros/humble/include/rcutils/rcutils/types/array_list.h:
+
+/home/mazenmadbouly/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/detail/pose_stamped__traits.hpp:
 
 /usr/include/c++/11/ctime:
 
@@ -3439,8 +3449,6 @@ CMakeFiles/bluerov_bridge_node.dir/src/bluerov_bridge_node.cpp.o: ../../src/blue
 /usr/include/x86_64-linux-gnu/bits/types/__FILE.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h:
-
-/home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/detail/pose_stamped__traits.hpp:
 
 /usr/include/c++/11/typeinfo:
 
@@ -3640,14 +3648,6 @@ CMakeFiles/bluerov_bridge_node.dir/src/bluerov_bridge_node.cpp.o: ../../src/blue
 
 /usr/include/c++/11/stdexcept:
 
-/usr/include/c++/11/tr1/modified_bessel_func.tcc:
-
-/usr/include/c++/11/bits/ostream.tcc:
-
-/opt/ros/humble/include/rclcpp/rclcpp/create_generic_publisher.hpp:
-
-/home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/pose_stamped.hpp:
-
 /usr/include/c++/11/bits/std_thread.h:
 
 /usr/include/c++/11/bits/localefwd.h:
@@ -3758,8 +3758,6 @@ CMakeFiles/bluerov_bridge_node.dir/src/bluerov_bridge_node.cpp.o: ../../src/blue
 
 /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h:
 
-/home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/detail/pose_stamped__type_support.hpp:
-
 /usr/include/c++/11/bits/stl_bvector.h:
 
 /opt/ros/humble/include/libstatistics_collector/libstatistics_collector/topic_statistics_collector/topic_statistics_collector.hpp:
@@ -3861,10 +3859,6 @@ CMakeFiles/bluerov_bridge_node.dir/src/bluerov_bridge_node.cpp.o: ../../src/blue
 /opt/ros/humble/include/rmw/rmw/init.h:
 
 /opt/ros/humble/include/rclcpp/rclcpp/generic_subscription.hpp:
-
-/usr/include/c++/11/cstring:
-
-/home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/rosidl_generator_cpp__visibility_control.hpp:
 
 /opt/ros/humble/include/rclcpp/rclcpp/node_interfaces/node_clock_interface.hpp:
 
@@ -4074,8 +4068,6 @@ CMakeFiles/bluerov_bridge_node.dir/src/bluerov_bridge_node.cpp.o: ../../src/blue
 
 /usr/include/eigen3/Eigen/src/Core/AssignEvaluator.h:
 
-/home/mazenmadbouly/auv_core_ros2/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/detail/pose_stamped__struct.hpp:
-
 /opt/ros/humble/include/std_msgs/std_msgs/msg/detail/header__struct.hpp:
 
 /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h:
@@ -4087,6 +4079,12 @@ CMakeFiles/bluerov_bridge_node.dir/src/bluerov_bridge_node.cpp.o: ../../src/blue
 /opt/ros/humble/include/rmw/rmw/events_statuses/liveliness_lost.h:
 
 /usr/include/eigen3/Eigen/src/Householder/BlockHouseholder.h:
+
+/opt/ros/humble/include/rcl_interfaces/rcl_interfaces/msg/detail/parameter__builder.hpp:
+
+/home/mazenmadbouly/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/detail/pose_stamped__type_support.hpp:
+
+/home/mazenmadbouly/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/rosidl_generator_cpp__visibility_control.hpp:
 
 /usr/include/asm-generic/errno.h:
 
@@ -4503,6 +4501,8 @@ CMakeFiles/bluerov_bridge_node.dir/src/bluerov_bridge_node.cpp.o: ../../src/blue
 /usr/include/c++/11/pstl/glue_memory_defs.h:
 
 /home/mazenmadbouly/mavlink/generated/include/mavlink/v2.0/common/mavlink_msg_autopilot_state_for_gimbal_device.h:
+
+/home/mazenmadbouly/auv_core_helper/install/auv_core_helper/include/auv_core_helper/msg/detail/pose_stamped__struct.hpp:
 
 /home/mazenmadbouly/mavlink/generated/include/mavlink/v2.0/common/mavlink_msg_gps_status.h:
 

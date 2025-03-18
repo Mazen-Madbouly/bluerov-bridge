@@ -1,0 +1,27 @@
+[0.038s] Invoking command in '/home/mazenmadbouly/bluerov-bridge/build/bluerov-bridge': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/mazenmadbouly/bluerov-bridge/build/bluerov-bridge -- -j12 -l12
+[0.331s] [35m[1mConsolidate compiler generated dependencies of target bluerov_bridge_node[0m
+[0.497s] [ 33%] [32mBuilding CXX object CMakeFiles/bluerov_bridge_node.dir/src/bluerov-bridge/bluerov_bridge.cpp.o[0m
+[53.707s] [ 66%] [32m[1mLinking CXX executable bluerov_bridge_node[0m
+[62.097s] [100%] Built target bluerov_bridge_node
+[62.124s] Invoked command in '/home/mazenmadbouly/bluerov-bridge/build/bluerov-bridge' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/mazenmadbouly/bluerov-bridge/build/bluerov-bridge -- -j12 -l12
+[62.154s] Invoking command in '/home/mazenmadbouly/bluerov-bridge/build/bluerov-bridge': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/mazenmadbouly/bluerov-bridge/build/bluerov-bridge
+[62.173s] -- Install configuration: "Debug"
+[62.175s] -- Execute custom install script
+[62.176s] -- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/lib/bluerov-bridge/bluerov_bridge_node
+[62.179s] -- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/include//bluerov-bridge/bluerov_bridge.hpp
+[62.180s] -- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/ament_index/resource_index/package_run_dependencies/bluerov-bridge
+[62.182s] -- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/ament_index/resource_index/parent_prefix_path/bluerov-bridge
+[62.182s] -- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/environment/ament_prefix_path.sh
+[62.184s] -- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/environment/ament_prefix_path.dsv
+[62.184s] -- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/environment/path.sh
+[62.185s] -- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/environment/path.dsv
+[62.186s] -- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/local_setup.bash
+[62.187s] -- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/local_setup.sh
+[62.187s] -- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/local_setup.zsh
+[62.188s] -- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/local_setup.dsv
+[62.188s] -- Symlinking: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/package.dsv
+[62.212s] -- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/ament_index/resource_index/packages/bluerov-bridge
+[62.212s] -- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/cmake/bluerov-bridgeConfig.cmake
+[62.213s] -- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/cmake/bluerov-bridgeConfig-version.cmake
+[62.213s] -- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/package.xml
+[62.217s] Invoked command in '/home/mazenmadbouly/bluerov-bridge/build/bluerov-bridge' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/mazenmadbouly/bluerov-bridge/build/bluerov-bridge

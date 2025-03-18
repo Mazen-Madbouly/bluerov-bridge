@@ -90,12 +90,12 @@ void BlueROVBridge::initMavlinkConnection()
   }
 
   RCLCPP_INFO(this->get_logger(),
-      "Bound to 0.0.0.0:14551. Will receive BlueROV telemetry here, and send commands back to 192.168.2.1:14550.");
+      "Bound to 0.0.0.0:14551. Will receive BlueROV telemetry here, and send commands back to 127.0.0.1:14550.");
 
   std::memset(&remote_addr_, 0, sizeof(remote_addr_));
   remote_addr_.sin_family = AF_INET;
-  remote_addr_.sin_addr.s_addr = inet_addr("192.168.2.1");  // BlueROV's IP
-  remote_addr_.sin_port = htons(14551); // Send commands to BlueROV on 14550
+  remote_addr_.sin_addr.s_addr = inet_addr("127.0.0.1");  // Use localhost for simulation
+  remote_addr_.sin_port = htons(14550); // Send commands to ArduPilot on 14550
 
   target_system_   = 0;
   target_component_= 0;
