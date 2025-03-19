@@ -8,9 +8,9 @@
     // Initialize the ROS 2 system
     rclcpp::init(argc, argv);
 
-    // Create a shared pointer to the bluerov-bridge node without arguments
-    auto node = std::make_shared<BlueROVBridge>();
-
+    // Create node options and initialize the BlueROVBridge node
+    rclcpp::NodeOptions options;
+    auto node = std::make_shared<BlueROVBridge>(options);
 
     // Spin the ROS 2 node
     rclcpp::spin(node);

@@ -25,9 +25,14 @@ BlueROVBridge::BlueROVBridge(const rclcpp::NodeOptions& options)
       10
   );
 
-  // NEW: Publisher for /auv/velocity_actual
   velocity_actual_pub_ = this->create_publisher<geometry_msgs::msg::Twist>(
       "/auv/velocity_actual", 
+      10
+  );
+
+  // NEW: Publisher for waypoint reached notification
+  waypoint_reached_pub_ = this->create_publisher<std_msgs::msg::Bool>(
+      "/auv/waypoint_reached",
       10
   );
 
@@ -43,6 +48,19 @@ BlueROVBridge::BlueROVBridge(const rclcpp::NodeOptions& options)
       std::bind(&BlueROVBridge::kclStateCallback, this, std::placeholders::_1)
   );
 
+  // NEW: Subscribe to waypoint and path topics
+  waypoint_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
+      "/auv/waypoint",
+      10,
+      std::bind(&BlueROVBridge::waypointCallback, this, std::placeholders::_1)
+  );
+
+  path_sub_ = this->create_subscription<nav_msgs::msg::Path>(
+      "/auv/path",
+      10,
+      std::bind(&BlueROVBridge::pathCallback, this, std::placeholders::_1)
+  );
+
   // 3) Timers
   data_timer_ = this->create_wall_timer(
       std::chrono::milliseconds(125), // ~8Hz
@@ -53,6 +71,18 @@ BlueROVBridge::BlueROVBridge(const rclcpp::NodeOptions& options)
       std::chrono::milliseconds(125), // ~8Hz
       std::bind(&BlueROVBridge::controlLoop, this)
   );
+
+  // NEW: Waypoint navigation timer (check progress at 4Hz)
+  waypoint_timer_ = this->create_wall_timer(
+      std::chrono::milliseconds(250), // 4Hz
+      std::bind(&BlueROVBridge::waypointNavigationTimer, this)
+  );
+
+  // 4) Initialize parameters
+  waypoint_acceptance_radius_ = this->declare_parameter<double>("waypoint_acceptance_radius", 1.0);
+  
+  RCLCPP_INFO(this->get_logger(), "Waypoint navigation configured with acceptance radius: %.2f meters", 
+              waypoint_acceptance_radius_);
 }
 
 //=============================================================================
@@ -397,6 +427,7 @@ void BlueROVBridge::velocityCallback(const geometry_msgs::msg::Twist::SharedPtr 
 //   - If state="IDLE": disarm
 //   - Else: arm in MANUAL
 //   - If "PATH_FOLLOWING": reset home pose
+//   - If "WAYPOINT_NAVIGATION": set GUIDED mode for waypoint navigation
 //=============================================================================
 void BlueROVBridge::kclStateCallback(const std_msgs::msg::String::SharedPtr msg)
 {
@@ -406,6 +437,13 @@ void BlueROVBridge::kclStateCallback(const std_msgs::msg::String::SharedPtr msg)
 
   if (msg->data == "IDLE") {
     disarm();
+    waypoint_navigation_active_ = false;
+    guided_mode_active_ = false;
+    position_hold_active_ = false;
+    
+    // Clear waypoint queue
+    std::queue<geometry_msgs::msg::PoseStamped> empty;
+    std::swap(waypoint_queue_, empty);
   } else {
     arm("MANUAL");
   }
@@ -419,6 +457,26 @@ void BlueROVBridge::kclStateCallback(const std_msgs::msg::String::SharedPtr msg)
       poseHome_[0], poseHome_[1], poseHome_[2],
       poseHome_[3], poseHome_[4], poseHome_[5]
     );
+  } else if (msg->data == "WAYPOINT_NAVIGATION") {
+    // Set home pose if not already set
+    if (!home_pose_set_) {
+      poseHome_ = poseActual_;
+      home_pose_set_ = true;
+      RCLCPP_INFO(
+        this->get_logger(),
+        "Home pose set for waypoint navigation: x=%.2f, y=%.2f, z=%.2f, roll=%.2f, pitch=%.2f, yaw=%.2f",
+        poseHome_[0], poseHome_[1], poseHome_[2],
+        poseHome_[3], poseHome_[4], poseHome_[5]
+      );
+    }
+    
+    // Switch to GUIDED mode for waypoint navigation
+    setGuidedMode();
+    
+    // Process any waypoints in the queue
+    if (!waypoint_queue_.empty() && !waypoint_navigation_active_) {
+      processNextWaypoint();
+    }
   }
 
   kcl_state_ = msg->data;
@@ -670,4 +728,305 @@ void BlueROVBridge::setMessageInterval(uint16_t message_id, float frequency_hz)
   RCLCPP_INFO(this->get_logger(),
       "Requested message #%d at %.1f Hz (%.0f us).",
       message_id, frequency_hz, interval_us);
+}
+
+//=============================================================================
+// waypointCallback
+// Handles a single waypoint received from the /auv/waypoint topic
+//=============================================================================
+void BlueROVBridge::waypointCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
+{
+  RCLCPP_INFO(this->get_logger(), 
+      "Received new waypoint: x=%.2f, y=%.2f, z=%.2f", 
+      msg->pose.position.x, msg->pose.position.y, msg->pose.position.z);
+
+  // Clear any existing waypoints
+  std::queue<geometry_msgs::msg::PoseStamped> empty;
+  std::swap(waypoint_queue_, empty);
+  
+  // Add the new waypoint to the queue
+  waypoint_queue_.push(*msg);
+  
+  // If not currently navigating to a waypoint, start the process
+  if (!waypoint_navigation_active_) {
+    processNextWaypoint();
+  } else {
+    RCLCPP_INFO(this->get_logger(), "Waypoint added to queue. Will navigate after current waypoint is reached.");
+  }
+}
+
+//=============================================================================
+// pathCallback
+// Handles a sequence of waypoints received as a path from the /auv/path topic
+//=============================================================================
+void BlueROVBridge::pathCallback(const nav_msgs::msg::Path::SharedPtr msg)
+{
+  if (msg->poses.empty()) {
+    RCLCPP_WARN(this->get_logger(), "Received empty path. No waypoints to follow.");
+    return;
+  }
+  
+  RCLCPP_INFO(this->get_logger(), "Received path with %zu waypoints", msg->poses.size());
+  
+  // Clear existing waypoints
+  std::queue<geometry_msgs::msg::PoseStamped> empty;
+  std::swap(waypoint_queue_, empty);
+  
+  // Add all waypoints from the path to the queue
+  for (const auto& pose : msg->poses) {
+    waypoint_queue_.push(pose);
+  }
+  
+  // If not currently navigating to a waypoint, start the process
+  if (!waypoint_navigation_active_) {
+    processNextWaypoint();
+  } else {
+    RCLCPP_INFO(this->get_logger(), 
+        "Path with %zu waypoints added to queue. Will navigate after current waypoint is reached.", 
+        msg->poses.size());
+  }
+}
+
+//=============================================================================
+// waypointNavigationTimer
+// Periodically checks if current waypoint is reached and manages waypoint queue
+//=============================================================================
+void BlueROVBridge::waypointNavigationTimer()
+{
+  if (!waypoint_navigation_active_) {
+    return;  // No active navigation, nothing to do
+  }
+  
+  if (!got_heartbeat_) {
+    RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 5000,
+        "Waypoint navigation active but no autopilot connection yet");
+    return;
+  }
+  
+  // Check if the current waypoint has been reached
+  if (isWaypointReached()) {
+    RCLCPP_INFO(this->get_logger(), "Waypoint reached!");
+    
+    // Publish waypoint reached notification
+    std_msgs::msg::Bool reached_msg;
+    reached_msg.data = true;
+    waypoint_reached_pub_->publish(reached_msg);
+    
+    // Reset the flag
+    waypoint_reached_ = false;
+    
+    // Process the next waypoint if available
+    if (!waypoint_queue_.empty()) {
+      processNextWaypoint();
+    } else {
+      RCLCPP_INFO(this->get_logger(), "No more waypoints in queue. Holding position.");
+      waypoint_navigation_active_ = false;
+      position_hold_active_ = true;
+      position_hold_waypoint_ = current_waypoint_;
+      positionHold();
+    }
+  }
+}
+
+//=============================================================================
+// isWaypointReached
+// Determines if vehicle has reached the current waypoint based on position
+//=============================================================================
+bool BlueROVBridge::isWaypointReached()
+{
+  if (!home_pose_set_) {
+    RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 5000,
+        "Home pose not set yet. Cannot determine if waypoint is reached.");
+    return false;
+  }
+
+  // Calculate relative position in NED
+  double relative_x_ned = poseActual_[0] - poseHome_[0];
+  double relative_y_ned = poseActual_[1] - poseHome_[1];
+  double relative_z_ned = poseActual_[2] - poseHome_[2];
+
+  // Transform from NED to ENU for comparison with waypoint
+  // This is the inverse of the conversion in convertENUtoNED
+  // ENU.x = NED.y
+  // ENU.y = NED.x
+  // ENU.z = -NED.z
+  double current_x_enu = relative_y_ned;
+  double current_y_enu = relative_x_ned;
+  double current_z_enu = -relative_z_ned;
+  
+  // Calculate distance to waypoint in 3D space
+  double dx = current_x_enu - current_waypoint_.pose.position.x;
+  double dy = current_y_enu - current_waypoint_.pose.position.y;
+  double dz = current_z_enu - current_waypoint_.pose.position.z;
+  
+  double distance = std::sqrt(dx*dx + dy*dy + dz*dz);
+  
+  RCLCPP_DEBUG(this->get_logger(), 
+      "Distance to waypoint: %.2f meters (acceptance radius: %.2f)",
+      distance, waypoint_acceptance_radius_);
+  
+  // Waypoint is reached if within acceptance radius
+  return (distance <= waypoint_acceptance_radius_);
+}
+
+//=============================================================================
+// processNextWaypoint
+// Takes the next waypoint from the queue and sends it to ArduPilot
+//=============================================================================
+void BlueROVBridge::processNextWaypoint()
+{
+  if (waypoint_queue_.empty()) {
+    RCLCPP_WARN(this->get_logger(), "processNextWaypoint() called with empty queue");
+    waypoint_navigation_active_ = false;
+    return;
+  }
+  
+  // Get the next waypoint
+  current_waypoint_ = waypoint_queue_.front();
+  waypoint_queue_.pop();
+  
+  RCLCPP_INFO(this->get_logger(), 
+      "Processing next waypoint: x=%.2f, y=%.2f, z=%.2f", 
+      current_waypoint_.pose.position.x, 
+      current_waypoint_.pose.position.y, 
+      current_waypoint_.pose.position.z);
+  
+  // Ensure we're in GUIDED mode
+  if (!guided_mode_active_) {
+    setGuidedMode();
+  }
+  
+  // Send the waypoint to ArduPilot
+  sendWaypointToArdupilot(current_waypoint_);
+  
+  // Update state
+  waypoint_navigation_active_ = true;
+  waypoint_reached_ = false;
+  position_hold_active_ = false;
+}
+
+//=============================================================================
+// positionHold
+// Commands ArduPilot to hold position at the last waypoint
+//=============================================================================
+void BlueROVBridge::positionHold()
+{
+  RCLCPP_INFO(this->get_logger(), 
+      "Holding position at: x=%.2f, y=%.2f, z=%.2f", 
+      position_hold_waypoint_.pose.position.x, 
+      position_hold_waypoint_.pose.position.y, 
+      position_hold_waypoint_.pose.position.z);
+  
+  // Ensure we're in GUIDED mode
+  if (!guided_mode_active_) {
+    setGuidedMode();
+  }
+  
+  // Send the position hold waypoint to ArduPilot
+  sendWaypointToArdupilot(position_hold_waypoint_);
+}
+
+//=============================================================================
+// setGuidedMode
+// Switches ArduPilot to GUIDED mode for waypoint navigation
+//=============================================================================
+void BlueROVBridge::setGuidedMode()
+{
+  if (!got_heartbeat_) {
+    RCLCPP_WARN(this->get_logger(), 
+        "Cannot set GUIDED mode yet; no autopilot heartbeat discovered!");
+    return;
+  }
+
+  RCLCPP_INFO(this->get_logger(),
+      "Setting GUIDED mode (sys=%d, comp=%d)...",
+      target_system_, target_component_);
+
+  // For ArduSub, GUIDED mode uses custom_mode value 15
+  uint32_t custom_mode = 4; // GUIDED mode (ArduSub)
+
+  mavlink_message_t msg;
+  mavlink_msg_set_mode_pack(
+      system_id_,
+      component_id_,
+      &msg,
+      target_system_,
+      MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+      custom_mode
+  );
+  sendMavlinkMessage(msg);
+  
+  guided_mode_active_ = true;
+  RCLCPP_INFO(this->get_logger(), "GUIDED mode command sent.");
+}
+
+//=============================================================================
+// sendWaypointToArdupilot
+// Converts a waypoint to MAVLink SET_POSITION_TARGET_LOCAL_NED message
+//=============================================================================
+void BlueROVBridge::sendWaypointToArdupilot(const geometry_msgs::msg::PoseStamped& waypoint)
+{
+  if (!got_heartbeat_) {
+    RCLCPP_WARN(this->get_logger(), 
+        "Cannot send waypoint yet; no autopilot heartbeat discovered!");
+    return;
+  }
+  
+  // Convert waypoint from ENU to NED coordinate system for ArduPilot
+  mavlink_set_position_target_local_ned_t position_target;
+  convertENUtoNED(waypoint, position_target);
+  
+  // Create the MAVLink message
+  mavlink_message_t msg;
+  mavlink_msg_set_position_target_local_ned_encode(
+      system_id_,
+      component_id_,
+      &msg,
+      &position_target
+  );
+  
+  // Send the message
+  sendMavlinkMessage(msg);
+  
+  RCLCPP_INFO(this->get_logger(), 
+      "Sent waypoint to ArduPilot: NED(%.2f, %.2f, %.2f)",
+      position_target.x, position_target.y, position_target.z);
+}
+
+//=============================================================================
+// convertENUtoNED
+// Converts waypoint from ENU to NED coordinates for ArduPilot
+//=============================================================================
+void BlueROVBridge::convertENUtoNED(const geometry_msgs::msg::PoseStamped& enu, 
+                                   mavlink_set_position_target_local_ned_t& ned)
+{
+  // Clear the structure
+  memset(&ned, 0, sizeof(ned));
+  
+  // Set header information
+  ned.time_boot_ms = static_cast<uint32_t>(this->now().nanoseconds() / 1000000);
+  ned.target_system = target_system_;
+  ned.target_component = target_component_;
+  ned.coordinate_frame = MAV_FRAME_LOCAL_NED;
+  
+  // Create mask for position only (ignore velocity, acceleration, yaw, yaw rate)
+  ned.type_mask = 0b0000111111000111; // Use position only
+  
+  // Convert ENU to NED:
+  // NED.x = ENU.y
+  // NED.y = ENU.x
+  // NED.z = -ENU.z
+  ned.x = enu.pose.position.y;  // East -> North
+  ned.y = enu.pose.position.x;  // North -> East
+  ned.z = -enu.pose.position.z; // Up -> Down (negative)
+  
+  // Set velocities and accelerations to zero (not used with the defined type_mask)
+  ned.vx = 0.0f;
+  ned.vy = 0.0f;
+  ned.vz = 0.0f;
+  ned.afx = 0.0f;
+  ned.afy = 0.0f;
+  ned.afz = 0.0f;
+  ned.yaw = 0.0f;
+  ned.yaw_rate = 0.0f;
 }
