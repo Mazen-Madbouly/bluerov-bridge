@@ -6,6 +6,7 @@
 #include <cstring>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <thread>
 
 //=============================================================================
 // Constructor
@@ -178,11 +179,12 @@ void BlueROVBridge::receiveData()
             break;
           }
 
+          // Extract the heartbeat info
+          mavlink_heartbeat_t hb;
+          mavlink_msg_heartbeat_decode(&msg, &hb);
+
           // If we haven't yet received the autopilot heartbeat, handle it:
           if (!got_heartbeat_) {
-            mavlink_heartbeat_t hb;
-            mavlink_msg_heartbeat_decode(&msg, &hb);
-
             target_system_    = msg.sysid;
             target_component_ = msg.compid;
             got_heartbeat_    = true;
@@ -201,6 +203,46 @@ void BlueROVBridge::receiveData()
             // Request data streams only once
             requestDataStreams();
           }
+          
+          // Check the current vehicle mode
+          // For ArduSub, customMode contains the mode number
+          uint32_t current_mode = hb.custom_mode;
+          
+          // Track mode changes
+          // GUIDED mode is 4 in ArduSub
+          bool is_in_guided_mode = (current_mode == 4);
+          // POSHOLD mode is 16 in ArduSub
+          bool is_in_poshold_mode = (current_mode == 16);
+          
+          // If we think we're in GUIDED but the vehicle isn't, or vice versa
+          if (guided_mode_active_ != is_in_guided_mode) {
+            if (is_in_guided_mode) {
+              RCLCPP_INFO(this->get_logger(), "Vehicle is now in GUIDED mode!");
+              guided_mode_active_ = true;
+              position_hold_active_ = false;
+              mode_change_requested_ = false;
+              mode_change_attempts_ = 0;
+            } else if (guided_mode_active_ && !is_in_guided_mode && mode_change_requested_) {
+              // Only log this if we're actively trying to change modes
+              RCLCPP_WARN(this->get_logger(), 
+                  "Vehicle is not in GUIDED mode (current mode: %u)", current_mode);
+            }
+          }
+          
+          // Check if in POSHOLD mode
+          if (position_hold_active_ != is_in_poshold_mode) {
+            if (is_in_poshold_mode) {
+              RCLCPP_INFO(this->get_logger(), "Vehicle is now in POSHOLD mode!");
+              position_hold_active_ = true;
+              guided_mode_active_ = false;
+              mode_change_requested_ = false;
+              mode_change_attempts_ = 0;
+            } else if (position_hold_active_ && !is_in_poshold_mode && mode_change_requested_) {
+              RCLCPP_WARN(this->get_logger(), 
+                  "Vehicle is not in POSHOLD mode (current mode: %u)", current_mode);
+            }
+          }
+          
           break;
         }
 
@@ -255,9 +297,25 @@ void BlueROVBridge::receiveData()
         {
           mavlink_command_ack_t ack;
           mavlink_msg_command_ack_decode(&msg, &ack);
-          RCLCPP_INFO(this->get_logger(),
-              "CMD_ACK received: command=%u, result=%u",
-              ack.command, ack.result);
+          
+          // Check if this is a response to our mode change request
+          if (mode_change_requested_ && ack.command == MAV_CMD_DO_SET_MODE) {
+            mode_change_requested_ = false;
+            
+            if (ack.result == MAV_RESULT_ACCEPTED) {
+              RCLCPP_INFO(this->get_logger(), "Mode change accepted by ArduSub");
+            } else {
+              RCLCPP_ERROR(this->get_logger(), 
+                  "Mode change REJECTED by ArduSub (result=%u). Will retry in waypoint timer.",
+                  ack.result);
+              guided_mode_active_ = false;
+              mode_change_attempts_++;
+            }
+          } else {
+            RCLCPP_INFO(this->get_logger(),
+                "CMD_ACK received: command=%u, result=%u",
+                ack.command, ack.result);
+          }
           break;
         }
 
@@ -758,6 +816,12 @@ void BlueROVBridge::waypointCallback(const geometry_msgs::msg::PoseStamped::Shar
   // Add the new waypoint to the queue
   waypoint_queue_.push(*msg);
   
+  // If already in position hold mode, exit it to start waypoint navigation
+  if (position_hold_active_) {
+    position_hold_active_ = false;
+    RCLCPP_INFO(this->get_logger(), "Exiting position hold mode to start waypoint navigation");
+  }
+  
   // If not currently navigating to a waypoint, start the process
   if (!waypoint_navigation_active_) {
     processNextWaypoint();
@@ -788,6 +852,12 @@ void BlueROVBridge::pathCallback(const nav_msgs::msg::Path::SharedPtr msg)
     waypoint_queue_.push(pose);
   }
   
+  // If already in position hold mode, exit it to start waypoint navigation
+  if (position_hold_active_) {
+    position_hold_active_ = false;
+    RCLCPP_INFO(this->get_logger(), "Exiting position hold mode to start path following");
+  }
+  
   // If not currently navigating to a waypoint, start the process
   if (!waypoint_navigation_active_) {
     processNextWaypoint();
@@ -804,17 +874,76 @@ void BlueROVBridge::pathCallback(const nav_msgs::msg::Path::SharedPtr msg)
 //=============================================================================
 void BlueROVBridge::waypointNavigationTimer()
 {
-  if (!waypoint_navigation_active_) {
-    return;  // No active navigation, nothing to do
-  }
-  
   if (!got_heartbeat_) {
     RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 5000,
         "Waypoint navigation active but no autopilot connection yet");
     return;
   }
+  
+  // Check if we need to retry setting GUIDED mode
+  if (mode_change_requested_) {
+    auto elapsed = this->now() - mode_change_request_time_;
+    if (elapsed.seconds() > 2.0 && mode_change_attempts_ < 5) {
+      // If we're trying to switch to POSHOLD, don't retry with GUIDED
+      uint32_t custom_mode;
+      if (position_hold_active_) {
+        custom_mode = 16; // POSHOLD mode
+        RCLCPP_WARN(this->get_logger(), 
+            "No acknowledgment for POSHOLD mode change after 2 seconds. Retrying (%d/5)...",
+            mode_change_attempts_ + 1);
+      } else {
+        custom_mode = 4; // GUIDED mode
+        RCLCPP_WARN(this->get_logger(), 
+            "No acknowledgment for GUIDED mode change after 2 seconds. Retrying (%d/5)...",
+            mode_change_attempts_ + 1);
+      }
+      
+      mavlink_message_t msg;
+      mavlink_msg_set_mode_pack(
+          system_id_,
+          component_id_,
+          &msg,
+          target_system_,
+          MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+          custom_mode
+      );
+      
+      // Send multiple times for reliability
+      for (int i = 0; i < 3; i++) {
+        sendMavlinkMessage(msg);
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+      }
+      
+      mode_change_request_time_ = this->now();
+      mode_change_attempts_++;
+    }
+    else if (mode_change_attempts_ >= 5) {
+      RCLCPP_ERROR(this->get_logger(), 
+          "Failed to set mode after 5 attempts. Giving up.");
+      mode_change_requested_ = false;
+      // Don't reset other flags here - keep the current state
+      return;
+    }
+  }
 
-  // **** Modification: Re-send the current waypoint setpoint continuously ****
+  // Stop here if we're in position hold mode
+  if (position_hold_active_) {
+    return;  // No waypoint navigation while in position hold
+  }
+
+  if (!waypoint_navigation_active_) {
+    return;  // No active navigation, nothing to do
+  }
+  
+  // Only proceed if we're actually in GUIDED mode
+  if (!guided_mode_active_) {
+    RCLCPP_WARN(this->get_logger(), 
+        "Waypoint navigation active but not in GUIDED mode. Attempting to set GUIDED mode...");
+    setGuidedMode();
+    return;
+  }
+
+  // **** Re-send the current waypoint setpoint continuously ****
   sendWaypointToArdupilot(current_waypoint_);
   
   // Check if the current waypoint has been reached
@@ -835,7 +964,6 @@ void BlueROVBridge::waypointNavigationTimer()
     } else {
       RCLCPP_INFO(this->get_logger(), "Waypoint queue empty. Switching to POSHOLD mode. ");
       waypoint_navigation_active_ = false;
-      position_hold_active_ = true;
       positionHold();
     }
   }
@@ -955,10 +1083,19 @@ void BlueROVBridge::setGuidedMode()
       MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
       custom_mode
   );
-  sendMavlinkMessage(msg);
+  
+  // Send the message multiple times to increase reliability
+  for (int i = 0; i < 3; i++) {
+    sendMavlinkMessage(msg);
+    // Small delay between retries (20ms)
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  }
+  
+  mode_change_requested_ = true;
+  mode_change_request_time_ = this->now();
   
   guided_mode_active_ = true;
-  RCLCPP_INFO(this->get_logger(), "GUIDED mode command sent.");
+  RCLCPP_INFO(this->get_logger(), "GUIDED mode command sent (with 3 retries).");
 }
 
 //=============================================================================
@@ -985,9 +1122,23 @@ void BlueROVBridge::setPosHoldMode() {
       custom_mode
   );
 
-  sendMavlinkMessage(msg);
-  guided_mode_active_ = false;  // Exit GUIDED mode
-  RCLCPP_INFO(this->get_logger(), "Switched to POSHOLD mode.");
+  // Send multiple times for reliability
+  for (int i = 0; i < 3; i++) {
+    sendMavlinkMessage(msg);
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  }
+
+  // Update state flags properly
+  guided_mode_active_ = false;      // Exit GUIDED mode
+  position_hold_active_ = true;     // Enter POSHOLD mode
+  waypoint_navigation_active_ = false; // Not navigating waypoints
+  
+  // Reset mode change tracking with new state
+  mode_change_requested_ = true;
+  mode_change_request_time_ = this->now();
+  mode_change_attempts_ = 0;
+  
+  RCLCPP_INFO(this->get_logger(), "Switching to POSHOLD mode (sent 3 times).");
 }
 
 //=============================================================================

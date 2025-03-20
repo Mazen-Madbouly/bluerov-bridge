@@ -116,6 +116,11 @@ private:
     bool waypoint_reached_{false};
     bool guided_mode_active_{false};
     
+    /// Mode change tracking
+    bool mode_change_requested_{false};
+    rclcpp::Time mode_change_request_time_{};
+    uint32_t mode_change_attempts_{0};
+    
     /// Waypoint acceptance radius (meters)
     double waypoint_acceptance_radius_{0.5};
     
