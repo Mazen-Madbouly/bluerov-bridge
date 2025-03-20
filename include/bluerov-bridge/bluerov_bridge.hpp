@@ -117,7 +117,7 @@ private:
     bool guided_mode_active_{false};
     
     /// Waypoint acceptance radius (meters)
-    double waypoint_acceptance_radius_{1.0};
+    double waypoint_acceptance_radius_{0.5};
     
     /// Position hold at last waypoint when queue is empty
     bool position_hold_active_{false};
@@ -146,6 +146,8 @@ private:
     void setGuidedMode();
     void sendWaypointToArdupilot(const geometry_msgs::msg::PoseStamped& waypoint);
     void convertENUtoNED(const geometry_msgs::msg::PoseStamped& enu, mavlink_set_position_target_local_ned_t& ned);
+
+    void setPosHoldMode();  // NEW: POSHOLD mode method
 
     void arm(const std::string& mode = "MANUAL");
     void disarm();
