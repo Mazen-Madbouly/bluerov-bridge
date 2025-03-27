@@ -8,6 +8,19 @@
 #include <unistd.h>
 #include <thread>
 
+/**
+ * @file bluerov_bridge.cpp
+ * @brief Implementation of the BlueROVBridge class that connects ROS2 to ArduSub via MAVLink
+ * 
+ * This bridge enables:
+ * 1. Manual control by passing velocity commands to ArduSub
+ * 2. Waypoint navigation in GUIDED mode (single waypoint or path)
+ * 3. Position holding at the last waypoint
+ * 
+ * Communication is via MAVLink over UDP, using the standard ArduSub protocol.
+ * Coordinate transformations between NED (ArduSub) and ENU (ROS) are handled.
+ */
+
 //=============================================================================
 // Constructor
 //=============================================================================
@@ -15,7 +28,7 @@ BlueROVBridge::BlueROVBridge(const rclcpp::NodeOptions& options)
   : Node("mavlink_bridge", options)
 {
   RCLCPP_INFO(this->get_logger(), 
-      "Starting BlueROVBridge node (single-port like pymavlink udpin:0.0.0.0:14551)...");
+      "Starting BlueROVBridge node (UDP port 14551)...");
 
   // 1) Initialize the MAVLink UDP connection on local port=14551
   initMavlinkConnection();
@@ -31,7 +44,7 @@ BlueROVBridge::BlueROVBridge(const rclcpp::NodeOptions& options)
       10
   );
 
-  // NEW: Publisher for waypoint reached notification
+  // Publisher for waypoint reached notification
   waypoint_reached_pub_ = this->create_publisher<std_msgs::msg::Bool>(
       "/auv/waypoint_reached",
       10
@@ -49,7 +62,7 @@ BlueROVBridge::BlueROVBridge(const rclcpp::NodeOptions& options)
       std::bind(&BlueROVBridge::kclStateCallback, this, std::placeholders::_1)
   );
 
-  // NEW: Subscribe to waypoint and path topics
+  // Subscribe to waypoint and path topics
   waypoint_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
       "/auv/waypoint",
       10,
@@ -73,14 +86,14 @@ BlueROVBridge::BlueROVBridge(const rclcpp::NodeOptions& options)
       std::bind(&BlueROVBridge::controlLoop, this)
   );
 
-  // NEW: Waypoint navigation timer (check progress at 4Hz)
+  // Waypoint navigation timer (check progress at 4Hz)
   waypoint_timer_ = this->create_wall_timer(
       std::chrono::milliseconds(250), // 4Hz
       std::bind(&BlueROVBridge::waypointNavigationTimer, this)
   );
 
   // 4) Initialize parameters
-  waypoint_acceptance_radius_ = this->declare_parameter<double>("waypoint_acceptance_radius", 0.5);
+  waypoint_acceptance_radius_ = this->declare_parameter<double>("waypoint_acceptance_radius", 0.1);
   
   RCLCPP_INFO(this->get_logger(), "Waypoint navigation configured with acceptance radius: %.2f meters", 
               waypoint_acceptance_radius_);
@@ -101,33 +114,57 @@ BlueROVBridge::~BlueROVBridge()
 // initMavlinkConnection
 //   Bind local port=14551. We do not set remote_addr_ until we see autopilot heartbeat.
 //=============================================================================
-
+/**
+ * @brief Initialize MAVLink UDP connection
+ * 
+ * This method:
+ * 1. Creates a UDP socket bound to port 14551 (standard ArduSub port)
+ * 2. Sets up initial remote_addr_ to the simulation address (127.0.0.1)
+ * 3. Will update remote_addr_ when the first heartbeat is received
+ * 
+ * @throws std::runtime_error if socket creation or binding fails
+ */
 void BlueROVBridge::initMavlinkConnection()
 {
+  // Create UDP socket
   sock_fd_ = socket(AF_INET, SOCK_DGRAM, 0);
   if (sock_fd_ < 0) {
-    throw std::runtime_error("Failed to create UDP socket()");
+    const std::string err_msg = "Failed to create UDP socket: " + std::string(strerror(errno));
+    RCLCPP_ERROR(this->get_logger(), "%s", err_msg.c_str());
+    throw std::runtime_error(err_msg);
   }
 
+  // Set up socket options - allow port reuse
+  int reuse = 1;
+  if (setsockopt(sock_fd_, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0) {
+    RCLCPP_WARN(this->get_logger(), "Failed to set SO_REUSEADDR: %s", strerror(errno));
+  }
+
+  // Configure local address to bind to all interfaces (0.0.0.0) on port 14551
   sockaddr_in local_addr;
   std::memset(&local_addr, 0, sizeof(local_addr));
   local_addr.sin_family      = AF_INET;
   local_addr.sin_addr.s_addr = INADDR_ANY; // 0.0.0.0 (listen on all interfaces)
   local_addr.sin_port        = htons(14551);  // Match BlueOS MAVLink endpoint
 
+  // Bind the socket
   if (bind(sock_fd_, reinterpret_cast<struct sockaddr*>(&local_addr), sizeof(local_addr)) < 0) {
-    RCLCPP_ERROR(this->get_logger(), "Binding UDP socket failed on port 14551");
-    throw std::runtime_error("Socket bind failed");
+    const std::string err_msg = "Socket bind failed on port 14551: " + std::string(strerror(errno));
+    RCLCPP_ERROR(this->get_logger(), "%s", err_msg.c_str());
+    close(sock_fd_);
+    throw std::runtime_error(err_msg);
   }
 
   RCLCPP_INFO(this->get_logger(),
-      "Bound to 0.0.0.0:14551. Will receive BlueROV telemetry here, and send commands back to 127.0.0.1:14550.");
+      "Bound to 0.0.0.0:14551, waiting for ArduSub telemetry (will initially send to 127.0.0.1:14551)");
 
+  // Initialize remote address (will be updated when first heartbeat is received)
   std::memset(&remote_addr_, 0, sizeof(remote_addr_));
   remote_addr_.sin_family = AF_INET;
-  remote_addr_.sin_addr.s_addr = inet_addr("127.0.0.1");  // Use localhost for simulation
+  remote_addr_.sin_addr.s_addr = inet_addr("127.0.0.1");  // Default for simulation
   remote_addr_.sin_port = htons(14551); // Send commands to ArduPilot on 14551
 
+  // Initialize ArduPilot-related fields
   target_system_   = 0;
   target_component_= 0;
   got_heartbeat_   = false;
@@ -208,9 +245,21 @@ void BlueROVBridge::receiveData()
           // For ArduSub, customMode contains the mode number
           uint32_t current_mode = hb.custom_mode;
           
+          // Log the current mode value when it changes (helps with debugging)
+          static uint32_t last_mode = UINT32_MAX;
+          if (current_mode != last_mode) {
+            RCLCPP_INFO(this->get_logger(), "Vehicle mode changed: %u", current_mode);
+            last_mode = current_mode;
+          }
+          
+          // ArduSub mode values (may vary by firmware version)
+          // Typical values are:
+          // STABILIZE = 0, MANUAL = 19, ALT_HOLD = 2, GUIDED = 4, POSHOLD = 16
+          
           // Track mode changes
           // GUIDED mode is 4 in ArduSub
           bool is_in_guided_mode = (current_mode == 4);
+          
           // POSHOLD mode is 16 in ArduSub
           bool is_in_poshold_mode = (current_mode == 16);
           
@@ -220,9 +269,8 @@ void BlueROVBridge::receiveData()
               RCLCPP_INFO(this->get_logger(), "Vehicle is now in GUIDED mode!");
               guided_mode_active_ = true;
               position_hold_active_ = false;
-              mode_change_requested_ = false;
               mode_change_attempts_ = 0;
-            } else if (guided_mode_active_ && !is_in_guided_mode && mode_change_requested_) {
+            } else if (guided_mode_active_ && !is_in_guided_mode) {
               // Only log this if we're actively trying to change modes
               RCLCPP_WARN(this->get_logger(), 
                   "Vehicle is not in GUIDED mode (current mode: %u)", current_mode);
@@ -235,9 +283,8 @@ void BlueROVBridge::receiveData()
               RCLCPP_INFO(this->get_logger(), "Vehicle is now in POSHOLD mode!");
               position_hold_active_ = true;
               guided_mode_active_ = false;
-              mode_change_requested_ = false;
               mode_change_attempts_ = 0;
-            } else if (position_hold_active_ && !is_in_poshold_mode && mode_change_requested_) {
+            } else if (position_hold_active_ && !is_in_poshold_mode) {
               RCLCPP_WARN(this->get_logger(), 
                   "Vehicle is not in POSHOLD mode (current mode: %u)", current_mode);
             }
@@ -298,21 +345,27 @@ void BlueROVBridge::receiveData()
           mavlink_command_ack_t ack;
           mavlink_msg_command_ack_decode(&msg, &ack);
           
-          // Check if this is a response to our mode change request
-          if (mode_change_requested_ && ack.command == MAV_CMD_DO_SET_MODE) {
-            mode_change_requested_ = false;
-            
+          // Log ACK messages regardless of the command type
+          if (ack.command == MAV_CMD_DO_SET_MODE) {
             if (ack.result == MAV_RESULT_ACCEPTED) {
               RCLCPP_INFO(this->get_logger(), "Mode change accepted by ArduSub");
             } else {
-              RCLCPP_ERROR(this->get_logger(), 
-                  "Mode change REJECTED by ArduSub (result=%u). Will retry in waypoint timer.",
-                  ack.result);
-              guided_mode_active_ = false;
-              mode_change_attempts_++;
+              // Log the specific error code for better diagnostics
+              const char* error_str = "Unknown";
+              switch (ack.result) {
+                case MAV_RESULT_DENIED: error_str = "DENIED"; break;
+                case MAV_RESULT_UNSUPPORTED: error_str = "UNSUPPORTED"; break;
+                case MAV_RESULT_FAILED: error_str = "FAILED"; break;
+                case MAV_RESULT_TEMPORARILY_REJECTED: error_str = "TEMPORARILY_REJECTED"; break;
+                default: error_str = "UNKNOWN"; break;
+              }
+              
+              RCLCPP_WARN(this->get_logger(), 
+                  "Mode change REJECTED by ArduSub (result=%s).", error_str);
             }
           } else {
-            RCLCPP_INFO(this->get_logger(),
+            // Only log non-mode change ACKs at DEBUG level to reduce noise
+            RCLCPP_DEBUG(this->get_logger(),
                 "CMD_ACK received: command=%u, result=%u",
                 ack.command, ack.result);
           }
@@ -374,9 +427,9 @@ void BlueROVBridge::controlLoop()
   }
 
   // Print PWM values
-  RCLCPP_INFO(this->get_logger(), "PWM Values: [%f, %f, %f, %f, %f, %f]",
-    velocityDesiredPwm_[0], velocityDesiredPwm_[1], velocityDesiredPwm_[2],
-    velocityDesiredPwm_[3], velocityDesiredPwm_[4], velocityDesiredPwm_[5]);
+  //RCLCPP_INFO(this->get_logger(), "PWM Values: [%f, %f, %f, %f, %f, %f]",
+  //  velocityDesiredPwm_[0], velocityDesiredPwm_[1], velocityDesiredPwm_[2],
+  //  velocityDesiredPwm_[3], velocityDesiredPwm_[4], velocityDesiredPwm_[5]);
 
   //--------------------------------------------------------------------------
   // POSE: Transform from NED -> ENU
@@ -546,6 +599,37 @@ void BlueROVBridge::kclStateCallback(const std_msgs::msg::String::SharedPtr msg)
     if (!waypoint_queue_.empty() && !waypoint_navigation_active_) {
       processNextWaypoint();
     }
+  } else if (msg->data == "POSITION_HOLD") {
+    // Set home pose if not already set
+    if (!home_pose_set_) {
+      poseHome_ = poseActual_;
+      home_pose_set_ = true;
+      RCLCPP_INFO(
+        this->get_logger(),
+        "Home pose set for position hold: x=%.2f, y=%.2f, z=%.2f, roll=%.2f, pitch=%.2f, yaw=%.2f",
+        poseHome_[0], poseHome_[1], poseHome_[2],
+        poseHome_[3], poseHome_[4], poseHome_[5]
+      );
+    }
+    
+    // Use current position as hold position
+    geometry_msgs::msg::PoseStamped current_pose;
+    current_pose.header.stamp = this->now();
+    current_pose.header.frame_id = "world";
+    
+    // Store the current position in ENU for position hold
+    // We won't need to use these directly as POSHOLD mode will handle position maintenance
+    current_pose.pose.position.x = 0.0;  // Use relative position at current location
+    current_pose.pose.position.y = 0.0;
+    current_pose.pose.position.z = 0.0;
+    
+    // Set as the position to hold
+    position_hold_waypoint_ = current_pose;
+    
+    // Switch to POSHOLD mode
+    setPosHoldMode();
+    
+    RCLCPP_INFO(this->get_logger(), "Manually entered POSITION_HOLD mode at current position");
   }
 
   kcl_state_ = msg->data;
@@ -588,21 +672,51 @@ void BlueROVBridge::arm(const std::string& mode)
   int32_t custom_mode = 19; // MANUAL=19 (ArduSub)
   if (mode == "ALT_HOLD") {
     custom_mode = 2;
+  } else if (mode == "GUIDED") {
+    custom_mode = 4;  // GUIDED mode
+  } else if (mode == "POSHOLD") {
+    custom_mode = 16; // POSHOLD mode
   }
   
   {
     mavlink_message_t msg;
-    mavlink_msg_set_mode_pack(
+    mavlink_msg_command_long_pack(
         system_id_,
         component_id_,
         &msg,
         target_system_,
-        MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-        static_cast<uint32_t>(custom_mode)
+        target_component_,
+        MAV_CMD_DO_SET_MODE,
+        0, // confirmation
+        1,  // param1: Mode, as defined by MAV_MODE enum (1 = MODE_GUIDED)
+        static_cast<float>(custom_mode),  // param2: Custom mode - ArduSub mode
+        0,  // param3: Custom sub-mode - not used for ArduSub
+        0, 0, 0, 0  // param4-7 unused
     );
-    sendMavlinkMessage(msg);
+    
+    // Send multiple times for reliability (UDP is unreliable)
+    constexpr int NUM_RETRIES = 3;
+    constexpr int RETRY_DELAY_MS = 20;
+    
+    for (int i = 0; i < NUM_RETRIES; i++) {
+      sendMavlinkMessage(msg);
+      std::this_thread::sleep_for(std::chrono::milliseconds(RETRY_DELAY_MS));
+    }
+    
     RCLCPP_INFO(this->get_logger(), 
-        "Set mode command sent (%s).", mode.c_str());
+        "Set mode command sent (%s, sent %d times).", mode.c_str(), NUM_RETRIES);
+        
+    // Update state flags based on the set mode
+    if (mode == "GUIDED") {
+      guided_mode_active_ = true;
+      position_hold_active_ = false;
+    } else if (mode == "POSHOLD") {
+      position_hold_active_ = true;
+      guided_mode_active_ = false;
+    } else {
+      guided_mode_active_ = false;
+      position_hold_active_ = false;
+    }
   }
 }
 
@@ -639,32 +753,65 @@ void BlueROVBridge::disarm()
 //=============================================================================
 // velocityToPwm
 //=============================================================================
+/**
+ * @brief Convert desired vehicle velocities to PWM values for ArduSub
+ * 
+ * This function maps the desired velocity values to the appropriate PWM range
+ * for ArduSub's RC override system. It applies:
+ * 1. Range clamping to ensure values don't exceed vehicle capabilities
+ * 2. Non-linear scaling for better sensitivity at low speeds
+ * 3. Mapping to the PWM range expected by ArduSub (1000-2000)
+ *
+ * @param velocities The desired velocities (x,y,z,roll,pitch,yaw)
+ * @param maxVelocities Maximum allowable velocities for each axis
+ * @param minVelocities Minimum allowable velocities for each axis
+ * @return Eigen::VectorXd PWM values for each channel
+ * @throws std::invalid_argument if input vectors have incorrect dimensions
+ */
 Eigen::VectorXd BlueROVBridge::velocityToPwm(const Eigen::VectorXd& velocities, 
                                              const Eigen::VectorXd& maxVelocities, 
                                              const Eigen::VectorXd& minVelocities)
 {
     // Validate input size
-    if (velocities.size() != 6 || maxVelocities.size() != 6 || minVelocities.size() != 6) {
+    constexpr int EXPECTED_SIZE = 6;
+    if (velocities.size() != EXPECTED_SIZE || 
+        maxVelocities.size() != EXPECTED_SIZE || 
+        minVelocities.size() != EXPECTED_SIZE) {
         throw std::invalid_argument("velocities, maxVelocities, and minVelocities must be 6x1 vectors");
     }
 
-    Eigen::VectorXd pwmValues(6);
+    Eigen::VectorXd pwmValues(EXPECTED_SIZE);
 
-    for (int i = 0; i < 6; ++i) {
+    // PWM constants
+    constexpr double PWM_CENTER = 1500.0;
+    constexpr double PWM_RANGE = 500.0;
+    constexpr double PWM_MIN = 1000.0;
+    constexpr double PWM_MAX = 2000.0;
+    constexpr double NONLINEAR_FACTOR = 0.8; // Power factor for non-linear scaling (less than 1.0 gives more sensitivity)
+
+    for (int i = 0; i < EXPECTED_SIZE; ++i) {
         // Clamp velocity to the specified range for the given index
-        double clampedVelocity = std::max(std::min(velocities(i), maxVelocities(i)), minVelocities(i));
+        double clampedVelocity = std::clamp(velocities(i), minVelocities(i), maxVelocities(i));
 
         // Map the clamped velocity to the range [-1, 1]
         double normalizedVelocity = 0.0;
-        if (maxVelocities(i) != minVelocities(i)) {
-            normalizedVelocity = (clampedVelocity - minVelocities(i)) / (maxVelocities(i) - minVelocities(i)) * 2.0 - 1.0;
+        double range = maxVelocities(i) - minVelocities(i);
+        if (std::abs(range) > 1e-6) { // Avoid division by zero
+            normalizedVelocity = (clampedVelocity - minVelocities(i)) / range * 2.0 - 1.0;
         }
 
-        // Map the normalized velocity to the PWM range [1100, 1900]
-        double pwm = 1500 + normalizedVelocity * 400;
+        // Apply non-linear scaling to increase sensitivity for small velocities
+        if (normalizedVelocity > 0) {
+            normalizedVelocity = std::pow(normalizedVelocity, NONLINEAR_FACTOR);
+        } else if (normalizedVelocity < 0) {
+            normalizedVelocity = -std::pow(std::abs(normalizedVelocity), NONLINEAR_FACTOR);
+        }
 
-        // Clamp the PWM output to [1100, 1900]
-        pwmValues(i) = std::max(std::min(pwm, 1900.0), 1100.0);
+        // Map the normalized velocity to the PWM range
+        pwmValues(i) = PWM_CENTER + normalizedVelocity * PWM_RANGE;
+        
+        // Ensure the PWM output is within the valid range
+        pwmValues(i) = std::clamp(pwmValues(i), PWM_MIN, PWM_MAX);
     }
 
     return pwmValues;
@@ -880,52 +1027,6 @@ void BlueROVBridge::waypointNavigationTimer()
     return;
   }
   
-  // Check if we need to retry setting GUIDED mode
-  if (mode_change_requested_) {
-    auto elapsed = this->now() - mode_change_request_time_;
-    if (elapsed.seconds() > 2.0 && mode_change_attempts_ < 5) {
-      // If we're trying to switch to POSHOLD, don't retry with GUIDED
-      uint32_t custom_mode;
-      if (position_hold_active_) {
-        custom_mode = 16; // POSHOLD mode
-        RCLCPP_WARN(this->get_logger(), 
-            "No acknowledgment for POSHOLD mode change after 2 seconds. Retrying (%d/5)...",
-            mode_change_attempts_ + 1);
-      } else {
-        custom_mode = 4; // GUIDED mode
-        RCLCPP_WARN(this->get_logger(), 
-            "No acknowledgment for GUIDED mode change after 2 seconds. Retrying (%d/5)...",
-            mode_change_attempts_ + 1);
-      }
-      
-      mavlink_message_t msg;
-      mavlink_msg_set_mode_pack(
-          system_id_,
-          component_id_,
-          &msg,
-          target_system_,
-          MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-          custom_mode
-      );
-      
-      // Send multiple times for reliability
-      for (int i = 0; i < 3; i++) {
-        sendMavlinkMessage(msg);
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
-      }
-      
-      mode_change_request_time_ = this->now();
-      mode_change_attempts_++;
-    }
-    else if (mode_change_attempts_ >= 5) {
-      RCLCPP_ERROR(this->get_logger(), 
-          "Failed to set mode after 5 attempts. Giving up.");
-      mode_change_requested_ = false;
-      // Don't reset other flags here - keep the current state
-      return;
-    }
-  }
-
   // Stop here if we're in position hold mode
   if (position_hold_active_) {
     return;  // No waypoint navigation while in position hold
@@ -1071,17 +1172,20 @@ void BlueROVBridge::setGuidedMode()
       "Setting GUIDED mode (sys=%d, comp=%d)...",
       target_system_, target_component_);
 
-  // For ArduSub, GUIDED mode uses custom_mode value 4
-  uint32_t custom_mode = 4; // GUIDED mode (ArduSub)
-
+  // Alternative approach using COMMAND_LONG
   mavlink_message_t msg;
-  mavlink_msg_set_mode_pack(
+  mavlink_msg_command_long_pack(
       system_id_,
       component_id_,
       &msg,
       target_system_,
-      MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-      custom_mode
+      target_component_,
+      MAV_CMD_DO_SET_MODE,
+      0, // confirmation
+      1,  // param1: Mode, as defined by MAV_MODE enum (1 = MODE_GUIDED)
+      4,  // param2: Custom mode - ArduSub GUIDED mode (4)
+      0,  // param3: Custom sub-mode - not used for ArduSub
+      0, 0, 0, 0  // param4-7 unused
   );
   
   // Send the message multiple times to increase reliability
@@ -1091,17 +1195,25 @@ void BlueROVBridge::setGuidedMode()
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
   }
   
-  mode_change_requested_ = true;
-  mode_change_request_time_ = this->now();
-  
   guided_mode_active_ = true;
-  RCLCPP_INFO(this->get_logger(), "GUIDED mode command sent (with 3 retries).");
+  RCLCPP_INFO(this->get_logger(), "GUIDED mode command sent (with 3 retries, mode=%u).", 4);
 }
 
 //=============================================================================
 // setPosHoldMode
 // Switches ArduPilot to POSHOLD mode
 //=============================================================================
+/**
+ * @brief Switch ArduPilot to POSHOLD mode to hold position
+ * 
+ * This method:
+ * 1. Sends the SET_MODE command to ArduSub with custom_mode=16 (POSHOLD)
+ * 2. Updates the internal state to reflect position hold is active
+ * 3. Disables waypoint navigation and guided mode
+ * 4. Sets up mode change tracking for confirmation
+ * 
+ * Position hold mode is used after completing waypoints to maintain position.
+ */
 void BlueROVBridge::setPosHoldMode() {
   if (!got_heartbeat_) {
     RCLCPP_WARN(this->get_logger(), 
@@ -1110,22 +1222,32 @@ void BlueROVBridge::setPosHoldMode() {
   }
 
   // ArduSub POSHOLD mode uses custom_mode=16
-  uint32_t custom_mode = 16; 
+  constexpr uint32_t POSHOLD_MODE = 16;
 
+  // Use COMMAND_LONG with MAV_CMD_DO_SET_MODE instead of SET_MODE
+  // This is the approach QGroundControl uses
   mavlink_message_t msg;
-  mavlink_msg_set_mode_pack(
+  mavlink_msg_command_long_pack(
       system_id_,
       component_id_,
       &msg,
       target_system_,
-      MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-      custom_mode
+      target_component_,
+      MAV_CMD_DO_SET_MODE,
+      0, // confirmation
+      1,  // param1: Mode, as defined by MAV_MODE enum (1 = MODE_GUIDED)
+      POSHOLD_MODE,  // param2: Custom mode - ArduSub POSHOLD mode (16)
+      0,  // param3: Custom sub-mode - not used for ArduSub
+      0, 0, 0, 0  // param4-7 unused
   );
 
-  // Send multiple times for reliability
-  for (int i = 0; i < 3; i++) {
+  // Send multiple times for reliability (UDP is unreliable)
+  constexpr int NUM_RETRIES = 3;
+  constexpr int RETRY_DELAY_MS = 20;
+  
+  for (int i = 0; i < NUM_RETRIES; i++) {
     sendMavlinkMessage(msg);
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    std::this_thread::sleep_for(std::chrono::milliseconds(RETRY_DELAY_MS));
   }
 
   // Update state flags properly
@@ -1133,18 +1255,32 @@ void BlueROVBridge::setPosHoldMode() {
   position_hold_active_ = true;     // Enter POSHOLD mode
   waypoint_navigation_active_ = false; // Not navigating waypoints
   
-  // Reset mode change tracking with new state
-  mode_change_requested_ = true;
-  mode_change_request_time_ = this->now();
-  mode_change_attempts_ = 0;
+  // Save current position as the position hold waypoint
+  if (home_pose_set_) {
+    position_hold_waypoint_ = current_waypoint_;
+    RCLCPP_INFO(this->get_logger(), 
+        "Storing position hold at: (%.2f, %.2f, %.2f)",
+        position_hold_waypoint_.pose.position.x,
+        position_hold_waypoint_.pose.position.y,
+        position_hold_waypoint_.pose.position.z);
+  }
   
-  RCLCPP_INFO(this->get_logger(), "Switching to POSHOLD mode (sent 3 times).");
+  RCLCPP_INFO(this->get_logger(), "Switching to POSHOLD mode (sent %d times).", NUM_RETRIES);
 }
 
 //=============================================================================
 // sendWaypointToArdupilot
 // Converts a waypoint to MAVLink SET_POSITION_TARGET_LOCAL_NED message
 //=============================================================================
+/**
+ * @brief Send a waypoint to ArduPilot in GUIDED mode
+ * 
+ * This function converts a ROS waypoint (in ENU coordinates) to a MAVLink
+ * SET_POSITION_TARGET_LOCAL_NED message (in NED coordinates) and sends it
+ * to ArduPilot.
+ * 
+ * @param waypoint The waypoint position in ENU coordinates
+ */
 void BlueROVBridge::sendWaypointToArdupilot(const geometry_msgs::msg::PoseStamped& waypoint)
 {
   if (!got_heartbeat_) {
@@ -1176,8 +1312,19 @@ void BlueROVBridge::sendWaypointToArdupilot(const geometry_msgs::msg::PoseStampe
 
 //=============================================================================
 // convertENUtoNED
-// Converts waypoint from ENU to NED coordinates for ArduPilot
+// Converts waypoint from ENU coordinates to NED coordinates for ArduPilot
 //=============================================================================
+/**
+ * @brief Convert waypoint from ENU to NED coordinate system
+ * 
+ * Coordinate conversion from ROS (ENU) to ArduPilot (NED):
+ * NED.x = ENU.y  (North = East)
+ * NED.y = ENU.x  (East = North) 
+ * NED.z = -ENU.z (Down = -Up)
+ * 
+ * @param enu Input waypoint in ENU coordinates
+ * @param ned Output structure in NED coordinates for MAVLink
+ */
 void BlueROVBridge::convertENUtoNED(const geometry_msgs::msg::PoseStamped& enu, 
                                    mavlink_set_position_target_local_ned_t& ned)
 {
@@ -1190,16 +1337,14 @@ void BlueROVBridge::convertENUtoNED(const geometry_msgs::msg::PoseStamped& enu,
   ned.target_component = target_component_;
   ned.coordinate_frame = MAV_FRAME_LOCAL_NED;
   
-  // Create mask for position  (ignore velocity , acceleration and yaw)
+  // Create mask for position only (ignore velocity, acceleration, yaw and yaw rate)
+  // Each bit set to 1 means "ignore this dimension"
   ned.type_mask = 0b111111111000; // Use position only
   
-  // Convert ENU to NED:
-  // NED.x = ENU.y
-  // NED.y = ENU.x
-  // NED.z = -ENU.z
-  ned.x = enu.pose.position.y;  // East -> North
-  ned.y = enu.pose.position.x;  // North -> East
-  ned.z = -enu.pose.position.z; // Up -> Down (negative)
+  // Convert ENU to NED coordinates
+  ned.x = enu.pose.position.y;  // North = East (ENU.y -> NED.x)
+  ned.y = enu.pose.position.x;  // East = North (ENU.x -> NED.y)
+  ned.z = -enu.pose.position.z; // Down = -Up (negative ENU.z -> NED.z)
   
   // Set velocities and accelerations to zero (not used with the defined type_mask)
   ned.vx = 0.0f;
