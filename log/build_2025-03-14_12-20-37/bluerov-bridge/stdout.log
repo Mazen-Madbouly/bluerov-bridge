@@ -1,0 +1,22 @@
+[ 33%] [32mBuilding CXX object CMakeFiles/bluerov_bridge_node.dir/src/bluerov-bridge/bluerov_bridge.cpp.o[0m
+[ 66%] [32m[1mLinking CXX executable bluerov_bridge_node[0m
+[100%] Built target bluerov_bridge_node
+-- Install configuration: "Debug"
+-- Execute custom install script
+-- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/lib/bluerov-bridge/bluerov_bridge_node
+-- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/include//bluerov-bridge/bluerov_bridge.hpp
+-- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/ament_index/resource_index/package_run_dependencies/bluerov-bridge
+-- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/ament_index/resource_index/parent_prefix_path/bluerov-bridge
+-- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/environment/ament_prefix_path.sh
+-- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/environment/ament_prefix_path.dsv
+-- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/environment/path.sh
+-- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/environment/path.dsv
+-- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/local_setup.bash
+-- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/local_setup.sh
+-- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/local_setup.zsh
+-- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/local_setup.dsv
+-- Symlinking: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/package.dsv
+-- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/ament_index/resource_index/packages/bluerov-bridge
+-- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/cmake/bluerov-bridgeConfig.cmake
+-- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/cmake/bluerov-bridgeConfig-version.cmake
+-- Up-to-date symlink: /home/mazenmadbouly/bluerov-bridge/install/bluerov-bridge/share/bluerov-bridge/package.xml
