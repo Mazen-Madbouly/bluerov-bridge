@@ -32,20 +32,9 @@ find_package(ament_index_cpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(PkgConfig REQUIRED)
-
-# Set the MAVLink paths 
-set(CMAKE_PREFIX_PATH "/home/mazenmadbouly/mavlink/install/lib/cmake/MAVLink" ${CMAKE_PREFIX_PATH})
-set(MAVLINK_INCLUDE_DIR "/home/mazenmadbouly/mavlink/generated/include")
-find_package(MAVLink REQUIRED)
+find_package(mavlink REQUIRED)
 
 pkg_check_modules(LIBCONFIGPP REQUIRED libconfig++)
-
-# Additional libraries
-#find_library(RML_LIBRARY NAMES rml)
-#find_library(CTRL_LIBRARY NAMES ctrl_toolbox)
-#find_library(IKCL_LIBRARY NAMES ikcl)
-#find_library(SIX_DOF_MODEL_LIBRARY NAMES underwater_vehicle_model REQUIRED)
-#find_library(QPOASES_LIBRARY NAMES qpOASES REQUIRED)
 
 # Prefer shared libraries over static ones
 set(CMAKE_FIND_LIBRARY_SUFFIXES .so .a)
@@ -57,8 +46,7 @@ include_directories(
   include
   ${auv_core_helper_INCLUDE_DIRS}
   ${LIBCONFIGPP_INCLUDE_DIRS}
-  ${MAVLink_INCLUDE_DIRS}
-  ${MAVLINK_INCLUDE_DIR}
+  ${mavlink_INCLUDE_DIRS}
 )
 
 
@@ -108,18 +96,13 @@ ament_target_dependencies(bluerov_bridge_node
   auv_core_helper
   rclcpp_lifecycle
   nav_msgs
-  MAVLink
+  mavlink
 )
 
 target_link_libraries(bluerov_bridge_node
-  #${RML_LIBRARY}
-  #${IKCL_LIBRARY}
-  #${CTRL_LIBRARY}
   ${auv_core_helper_LIBRARIES}
-  #${SIX_DOF_MODEL_LIBRARY}
-  #${QPOASES_LIBRARY}
   ${LIBCONFIGPP_LIBRARIES}
-  ${MAVLink_LIBRARIES}
+  ${mavlink_LIBRARIES}
 )
 
 ################################################################################
