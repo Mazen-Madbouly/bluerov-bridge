@@ -250,5 +250,7 @@ private:
      * @brief Set the update interval for MAVLink messages
      */
     void setMessageInterval(uint16_t message_id, float frequency_hz);
+    
+    double calculateYaw(const geometry_msgs::msg::PoseStamped& waypoint);
 };
 

@@ -1288,10 +1288,14 @@ void BlueROVBridge::sendWaypointToArdupilot(const geometry_msgs::msg::PoseStampe
         "Cannot send waypoint yet; no autopilot heartbeat discovered!");
     return;
   }
+
+  double yaw = calculateYaw(waypoint);
   
   // Convert waypoint from ENU to NED coordinate system for ArduPilot
   mavlink_set_position_target_local_ned_t position_target;
   convertENUtoNED(waypoint, position_target);
+
+  position_target.yaw = yaw;
   
   // Create the MAVLink message
   mavlink_message_t msg;
@@ -1306,8 +1310,8 @@ void BlueROVBridge::sendWaypointToArdupilot(const geometry_msgs::msg::PoseStampe
   sendMavlinkMessage(msg);
   
   RCLCPP_INFO(this->get_logger(), 
-      "Sent waypoint to ArduPilot: NED(%.2f, %.2f, %.2f)",
-      position_target.x, position_target.y, position_target.z);
+      "Sent waypoint to ArduPilot: NED(%.2f, %.2f, %.2f) with %.2f radians",
+      position_target.x, position_target.y, position_target.z, yaw);
 }
 
 //=============================================================================
@@ -1339,7 +1343,9 @@ void BlueROVBridge::convertENUtoNED(const geometry_msgs::msg::PoseStamped& enu,
   
   // Create mask for position only (ignore velocity, acceleration, yaw and yaw rate)
   // Each bit set to 1 means "ignore this dimension"
-  ned.type_mask = 0b111111111000; // Use position only
+  //ned.type_mask = 0b0000001111000000;
+  //ned.type_mask = 0b0001111000000;
+  ned.type_mask = 0b0000001111000000;
   
   // Convert ENU to NED coordinates
   ned.x = enu.pose.position.y;  // North = East (ENU.y -> NED.x)
@@ -1355,4 +1361,24 @@ void BlueROVBridge::convertENUtoNED(const geometry_msgs::msg::PoseStamped& enu,
   ned.afz = 0.0f;
   ned.yaw = 0.0f;
   ned.yaw_rate = 0.0f;
+}
+
+double BlueROVBridge::calculateYaw(const geometry_msgs::msg::PoseStamped &waypoint)
+{
+  // difference between waypoint position and actual pos of the rov
+  double dx = waypoint.pose.position.x - poseActual_[0]; 
+  double dy = waypoint.pose.position.y - poseActual_[1];
+
+  double desired_yaw = std::atan2(dy, dx);
+
+  double current_yaw = poseActual_[5]; // yaw in radians
+
+  // yaw error
+  double yaw_error = desired_yaw - current_yaw;
+
+  // Normalize yaw error to the range [-π, π]
+  while (yaw_error > M_PI) yaw_error -= 2.0 * M_PI;
+  while (yaw_error < -M_PI) yaw_error += 2.0 * M_PI;
+
+  return yaw_error;
 }
