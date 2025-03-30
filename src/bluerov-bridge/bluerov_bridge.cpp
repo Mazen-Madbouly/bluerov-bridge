@@ -1289,13 +1289,9 @@ void BlueROVBridge::sendWaypointToArdupilot(const geometry_msgs::msg::PoseStampe
     return;
   }
 
-  double yaw = calculateYaw(waypoint);
-  
   // Convert waypoint from ENU to NED coordinate system for ArduPilot
   mavlink_set_position_target_local_ned_t position_target;
   convertENUtoNED(waypoint, position_target);
-
-  position_target.yaw = yaw;
   
   // Create the MAVLink message
   mavlink_message_t msg;
@@ -1310,8 +1306,8 @@ void BlueROVBridge::sendWaypointToArdupilot(const geometry_msgs::msg::PoseStampe
   sendMavlinkMessage(msg);
   
   RCLCPP_INFO(this->get_logger(), 
-      "Sent waypoint to ArduPilot: NED(%.2f, %.2f, %.2f) with %.2f radians",
-      position_target.x, position_target.y, position_target.z, yaw);
+      "Sent waypoint to ArduPilot: NED(%.2f, %.2f, %.2f)",
+      position_target.x, position_target.y, position_target.z);
 }
 
 //=============================================================================
@@ -1344,13 +1340,14 @@ void BlueROVBridge::convertENUtoNED(const geometry_msgs::msg::PoseStamped& enu,
   // Create mask for position only (ignore velocity, acceleration, yaw and yaw rate)
   // Each bit set to 1 means "ignore this dimension"
   //ned.type_mask = 0b0000001111000000;
-  //ned.type_mask = 0b0001111000000;
-  ned.type_mask = 0b0000001111000000;
+  //ned.type_mask = 0b000111100000;
+  ned.type_mask = 0b0000001110000000;
   
   // Convert ENU to NED coordinates
   ned.x = enu.pose.position.y;  // North = East (ENU.y -> NED.x)
   ned.y = enu.pose.position.x;  // East = North (ENU.x -> NED.y)
   ned.z = -enu.pose.position.z; // Down = -Up (negative ENU.z -> NED.z)
+  ned.yaw = calculateYaw(enu);
   
   // Set velocities and accelerations to zero (not used with the defined type_mask)
   ned.vx = 0.0f;
@@ -1359,26 +1356,24 @@ void BlueROVBridge::convertENUtoNED(const geometry_msgs::msg::PoseStamped& enu,
   ned.afx = 0.0f;
   ned.afy = 0.0f;
   ned.afz = 0.0f;
-  ned.yaw = 0.0f;
+  //ned.yaw = 0.0f;
   ned.yaw_rate = 0.0f;
 }
 
-double BlueROVBridge::calculateYaw(const geometry_msgs::msg::PoseStamped &waypoint)
-{
-  // difference between waypoint position and actual pos of the rov
-  double dx = waypoint.pose.position.x - poseActual_[0]; 
-  double dy = waypoint.pose.position.y - poseActual_[1];
+double BlueROVBridge::calculateYaw(const geometry_msgs::msg::PoseStamped &waypoint) {
+  double waypoint_ned_x = waypoint.pose.position.y;   // NED.x = ENU.y
+  double waypoint_ned_y = waypoint.pose.position.x;   // NED.y = ENU.x
 
+  // calculate difference between waypoint and current position
+  double dx = waypoint_ned_x - poseActual_[0]; 
+  double dy = waypoint_ned_y - poseActual_[1];
+
+  // desired yaw
   double desired_yaw = std::atan2(dy, dx);
 
-  double current_yaw = poseActual_[5]; // yaw in radians
+  //normalization between -pi and pi
+  while (desired_yaw > M_PI) desired_yaw -= 2.0 * M_PI;
+  while (desired_yaw < -M_PI) desired_yaw += 2.0 * M_PI;
 
-  // yaw error
-  double yaw_error = desired_yaw - current_yaw;
-
-  // Normalize yaw error to the range [-π, π]
-  while (yaw_error > M_PI) yaw_error -= 2.0 * M_PI;
-  while (yaw_error < -M_PI) yaw_error += 2.0 * M_PI;
-
-  return yaw_error;
+  return desired_yaw;
 }

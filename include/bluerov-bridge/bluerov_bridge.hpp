@@ -24,6 +24,7 @@ extern "C" {
 #include <unistd.h>
 #include <queue>                                     // For waypoint queue
 
+#include <visualization_msgs/msg/marker.hpp>
 /**
  * @brief A ROS 2 node that interfaces with ArduPilot/BlueROV using MAVLink protocol.
  *
