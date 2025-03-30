@@ -82,6 +82,8 @@ add_executable(bluerov_bridge_node
     src/bluerov-bridge/bluerov_bridge.cpp
 )
 
+add_executable(user_input src/user_input.cpp)
+
 ################################################################################
 # Dependencies and linking
 ################################################################################
@@ -99,6 +101,8 @@ ament_target_dependencies(bluerov_bridge_node
   mavlink
 )
 
+ament_target_dependencies(user_input rclcpp std_msgs geometry_msgs)
+
 target_link_libraries(bluerov_bridge_node
   ${auv_core_helper_LIBRARIES}
   ${LIBCONFIGPP_LIBRARIES}
@@ -111,6 +115,8 @@ target_link_libraries(bluerov_bridge_node
 install(TARGETS bluerov_bridge_node
   DESTINATION lib/${PROJECT_NAME}
 )
+
+install(TARGETS user_input DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY include/
   DESTINATION include/
