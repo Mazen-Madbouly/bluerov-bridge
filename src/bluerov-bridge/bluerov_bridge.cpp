@@ -1341,8 +1341,7 @@ void BlueROVBridge::convertENUtoNED(const geometry_msgs::msg::PoseStamped& enu,
   // Each bit set to 1 means "ignore this dimension"
   //ned.type_mask = 0b0000001111000000;
   //ned.type_mask = 0b000111100000;
-  //ned.type_mask = 0b0000001110000000;
-  ned.type_mask = 0b000111100000;
+  ned.type_mask = 0b0000001110000000;
   
   // Convert ENU to NED coordinates
   ned.x = enu.pose.position.y;  // North = East (ENU.y -> NED.x)
