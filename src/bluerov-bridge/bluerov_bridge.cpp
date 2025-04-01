@@ -63,17 +63,18 @@ BlueROVBridge::BlueROVBridge(const rclcpp::NodeOptions& options)
   );
 
   // Subscribe to waypoint and path topics
-  waypoint_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
+  waypoint_sub_ = this->create_subscription<geographic_msgs::msg::GeoPoseStamped>(
       "/auv/waypoint",
       10,
       std::bind(&BlueROVBridge::waypointCallback, this, std::placeholders::_1)
   );
-
-  path_sub_ = this->create_subscription<nav_msgs::msg::Path>(
+  /*
+  path_sub_ = this->create_subscription<geographic_msgs::msg::GeoPath>(
       "/auv/path",
       10,
       std::bind(&BlueROVBridge::pathCallback, this, std::placeholders::_1)
   );
+  */
 
   // 3) Timers
   data_timer_ = this->create_wall_timer(
@@ -316,20 +317,14 @@ void BlueROVBridge::receiveData()
           break;
         }
 
-        case MAVLINK_MSG_ID_LOCAL_POSITION_NED:
+        case MAVLINK_MSG_ID_GLOBAL_POSITION_INT:
         {
-          mavlink_local_position_ned_t pos_ned;
-          mavlink_msg_local_position_ned_decode(&msg, &pos_ned);
-
-          // Position in NED
-          poseActual_[0] = pos_ned.x;
-          poseActual_[1] = pos_ned.y;
-          poseActual_[2] = pos_ned.z;
-
-          // Velocity in NED
-          velocityActual_[0] = pos_ned.vx;
-          velocityActual_[1] = pos_ned.vy;
-          velocityActual_[2] = pos_ned.vz;
+          mavlink_global_position_int_t pos;
+          mavlink_msg_global_position_int_decode(&msg, &pos);
+  
+          poseActual_[0] = pos.lat / 1e7; 
+          poseActual_[1] = pos.lon / 1e7; 
+          poseActual_[2] = pos.alt / 1000.0;
 
           if (!home_pose_set_) {
             poseHome_[0] = poseActual_[0];
@@ -337,6 +332,9 @@ void BlueROVBridge::receiveData()
             poseHome_[2] = poseActual_[2];
             home_pose_set_ = true;
           }
+  
+          //RCLCPP_INFO(this->get_logger(), "ROV Position: Lat=%.7f, Lon=%.7f, Alt=%.2f", poseActual_[0], poseActual_[1], poseActual_[2]);
+          
           break;
         }
 
@@ -398,7 +396,7 @@ void BlueROVBridge::requestDataStreams()
 
   // Example: we want 8 Hz for attitude (#30) and local position (#32).
   setMessageInterval(MAVLINK_MSG_ID_ATTITUDE,           8.0f); // #30
-  setMessageInterval(MAVLINK_MSG_ID_LOCAL_POSITION_NED, 8.0f); // #32
+  setMessageInterval(MAVLINK_MSG_ID_GLOBAL_POSITION_INT, 8.0f); // #32
 
   RCLCPP_INFO(this->get_logger(),
       "Configured message intervals for ATTITUDE(#30) and LOCAL_POSITION_NED(#32) at 8 Hz.");
@@ -563,7 +561,7 @@ void BlueROVBridge::kclStateCallback(const std_msgs::msg::String::SharedPtr msg)
     position_hold_active_ = false;
     
     // Clear waypoint queue
-    std::queue<geometry_msgs::msg::PoseStamped> empty;
+    std::queue<geographic_msgs::msg::GeoPoseStamped> empty;
     std::swap(waypoint_queue_, empty);
   } else {
     arm("MANUAL");
@@ -613,15 +611,15 @@ void BlueROVBridge::kclStateCallback(const std_msgs::msg::String::SharedPtr msg)
     }
     
     // Use current position as hold position
-    geometry_msgs::msg::PoseStamped current_pose;
+    geographic_msgs::msg::GeoPoseStamped current_pose;
     current_pose.header.stamp = this->now();
     current_pose.header.frame_id = "world";
     
     // Store the current position in ENU for position hold
     // We won't need to use these directly as POSHOLD mode will handle position maintenance
-    current_pose.pose.position.x = 0.0;  // Use relative position at current location
-    current_pose.pose.position.y = 0.0;
-    current_pose.pose.position.z = 0.0;
+    current_pose.pose.position.latitude = 0;
+    current_pose.pose.position.longitude = 0;
+    current_pose.pose.position.altitude = 0;
     
     // Set as the position to hold
     position_hold_waypoint_ = current_pose;
@@ -950,14 +948,14 @@ void BlueROVBridge::setMessageInterval(uint16_t message_id, float frequency_hz)
 // waypointCallback
 // Handles a single waypoint received from the /auv/waypoint topic
 //=============================================================================
-void BlueROVBridge::waypointCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
+void BlueROVBridge::waypointCallback(const geographic_msgs::msg::GeoPoseStamped::SharedPtr msg)
 {
   RCLCPP_INFO(this->get_logger(), 
       "Received new waypoint: x=%.2f, y=%.2f, z=%.2f", 
-      msg->pose.position.x, msg->pose.position.y, msg->pose.position.z);
+      msg->pose.position.latitude, msg->pose.position.longitude, msg->pose.position.altitude);
 
   // Clear any existing waypoints
-  std::queue<geometry_msgs::msg::PoseStamped> empty;
+  std::queue<geographic_msgs::msg::GeoPoseStamped> empty;
   std::swap(waypoint_queue_, empty);
   
   // Add the new waypoint to the queue
@@ -981,7 +979,8 @@ void BlueROVBridge::waypointCallback(const geometry_msgs::msg::PoseStamped::Shar
 // pathCallback
 // Handles a sequence of waypoints received as a path from the /auv/path topic
 //=============================================================================
-void BlueROVBridge::pathCallback(const nav_msgs::msg::Path::SharedPtr msg)
+/*
+void BlueROVBridge::pathCallback(const geographic_msgs::msg::GeoPath::SharedPtr msg)
 {
   if (msg->poses.empty()) {
     RCLCPP_WARN(this->get_logger(), "Received empty path. No waypoints to follow.");
@@ -991,7 +990,7 @@ void BlueROVBridge::pathCallback(const nav_msgs::msg::Path::SharedPtr msg)
   RCLCPP_INFO(this->get_logger(), "Received path with %zu waypoints", msg->poses.size());
   
   // Clear existing waypoints
-  std::queue<geometry_msgs::msg::PoseStamped> empty;
+  std::queue<geographic_msgs::msg::GeoPoseStamped> empty;
   std::swap(waypoint_queue_, empty);
   
   // Add all waypoints from the path to the queue
@@ -1014,6 +1013,7 @@ void BlueROVBridge::pathCallback(const nav_msgs::msg::Path::SharedPtr msg)
         msg->poses.size());
   }
 }
+  */
 
 //=============================================================================
 // waypointNavigationTimer
@@ -1076,47 +1076,36 @@ void BlueROVBridge::waypointNavigationTimer()
 //=============================================================================
 bool BlueROVBridge::isWaypointReached()
 {
-  if (!home_pose_set_) {
+  if (!home_pose_set_)
+  {
     RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 5000,
-        "Home pose not set yet. Cannot determine if waypoint is reached.");
+                         "Home pose not set yet. Cannot determine if waypoint is reached.");
     return false;
   }
 
-  // Calculate relative position in NED
-  double relative_x_ned = poseActual_[0] - poseHome_[0];
-  double relative_y_ned = poseActual_[1] - poseHome_[1];
-  double relative_z_ned = poseActual_[2] - poseHome_[2];
+  // Calcola la distanza in metri tra waypoint e posizione attuale usando la formula di Haversine
+  double distance = haversineDistance(poseActual_[0], poseActual_[1], current_waypoint_.pose.position.latitude, current_waypoint_.pose.position.longitude);
+  double alt_difference = fabs(poseActual_[2] - current_waypoint_.pose.position.altitude);
 
-  // Transform from NED to ENU for comparison with waypoint
-  // This is the inverse of the conversion in convertENUtoNED
-  // ENU.x = NED.y
-  // ENU.y = NED.x
-  // ENU.z = -NED.z
-  double current_x_enu = relative_y_ned;
-  double current_y_enu = relative_x_ned;
-  double current_z_enu = -relative_z_ned;
-  
-  // Calculate distance to waypoint in 3D space
-  double dx = current_x_enu - current_waypoint_.pose.position.x;
-  double dy = current_y_enu - current_waypoint_.pose.position.y;
-  double dz = current_z_enu - current_waypoint_.pose.position.z;
-  
-  double distance = std::sqrt(dx*dx + dy*dy + dz*dz);
-  
-  // Print current and waypoint positions
-  RCLCPP_INFO(this->get_logger(), 
-    "Current ENU: (%.2f, %.2f, %.2f) | Waypoint ENU: (%.2f, %.2f, %.2f)",
-    current_x_enu, current_y_enu, current_z_enu,
-    current_waypoint_.pose.position.x, 
-    current_waypoint_.pose.position.y,
-    current_waypoint_.pose.position.z);
+  RCLCPP_INFO(this->get_logger(),
+              "Current Position: Lat=%.7f, Lon=%.7f, Alt=%.2f | Waypoint: Lat=%.7f, Lon=%.7f, Alt=%.2f",
+              poseActual_[0], poseActual_[1], poseActual_[2],
+              current_waypoint_.pose.position.latitude, current_waypoint_.pose.position.longitude, current_waypoint_.pose.position.altitude);
 
-  RCLCPP_DEBUG(this->get_logger(), 
-      "Distance to waypoint: %.2f meters (acceptance radius: %.2f)",
-      distance, waypoint_acceptance_radius_);
-  
-  // Waypoint is reached if within acceptance radius
-  return (distance <= waypoint_acceptance_radius_);
+  return (distance <= waypoint_acceptance_radius_ && alt_difference <= waypoint_acceptance_radius_);
+}
+double BlueROVBridge::haversineDistance(double lat1, double lon1, double lat2, double lon2)
+{
+    constexpr double R = 6371000; // Earth radius in meters
+    double dLat = (lat2 - lat1) * M_PI / 180.0; // difference calculation and conversion from deg to rad
+    double dLon = (lon2 - lon1) * M_PI / 180.0;
+    
+    double a = sin(dLat/2) * sin(dLat/2) + 
+               cos(lat1 * M_PI / 180.0) * cos(lat2 * M_PI / 180.0) * 
+               sin(dLon/2) * sin(dLon/2);
+    
+    double c = 2 * atan2(sqrt(a), sqrt(1-a));
+    return R * c;
 }
 
 //=============================================================================
@@ -1260,9 +1249,9 @@ void BlueROVBridge::setPosHoldMode() {
     position_hold_waypoint_ = current_waypoint_;
     RCLCPP_INFO(this->get_logger(), 
         "Storing position hold at: (%.2f, %.2f, %.2f)",
-        position_hold_waypoint_.pose.position.x,
-        position_hold_waypoint_.pose.position.y,
-        position_hold_waypoint_.pose.position.z);
+        position_hold_waypoint_.pose.position.latitude,
+        position_hold_waypoint_.pose.position.longitude,
+        position_hold_waypoint_.pose.position.altitude);
   }
   
   RCLCPP_INFO(this->get_logger(), "Switching to POSHOLD mode (sent %d times).", NUM_RETRIES);
@@ -1281,95 +1270,67 @@ void BlueROVBridge::setPosHoldMode() {
  * 
  * @param waypoint The waypoint position in ENU coordinates
  */
-void BlueROVBridge::sendWaypointToArdupilot(const geometry_msgs::msg::PoseStamped& waypoint)
+void BlueROVBridge::sendWaypointToArdupilot(const geographic_msgs::msg::GeoPoseStamped &waypoint)
 {
-  if (!got_heartbeat_) {
-    RCLCPP_WARN(this->get_logger(), 
-        "Cannot send waypoint yet; no autopilot heartbeat discovered!");
+  if (!got_heartbeat_)
+  {
+    RCLCPP_WARN(this->get_logger(),
+                "Cannot send waypoint yet; no autopilot heartbeat discovered!");
     return;
   }
 
-  // Convert waypoint from ENU to NED coordinate system for ArduPilot
-  mavlink_set_position_target_local_ned_t position_target;
-  convertENUtoNED(waypoint, position_target);
-  
-  // Create the MAVLink message
   mavlink_message_t msg;
-  mavlink_msg_set_position_target_local_ned_encode(
-      system_id_,
-      component_id_,
-      &msg,
-      &position_target
-  );
-  
-  // Send the message
+  mavlink_set_position_target_global_int_t pos_target;
+
+  memset(&pos_target, 0, sizeof(pos_target));
+
+  pos_target.target_system = target_system_;
+  pos_target.target_component = target_component_;
+  pos_target.coordinate_frame = MAV_FRAME_GLOBAL_INT;
+
+  pos_target.lat_int = static_cast<int32_t>(waypoint.pose.position.latitude * 1e7);
+  pos_target.lon_int = static_cast<int32_t>(waypoint.pose.position.longitude * 1e7);
+  pos_target.alt = static_cast<float>(waypoint.pose.position.altitude);
+  pos_target.yaw = calculateYaw(waypoint);
+
+  // Maschera per ignorare velocità e accelerazione
+  pos_target.type_mask = 0b0000001110000000;
+
+  mavlink_msg_set_position_target_global_int_encode(
+      system_id_, component_id_, &msg, &pos_target);
+
   sendMavlinkMessage(msg);
-  
-  RCLCPP_INFO(this->get_logger(), 
-      "Sent waypoint to ArduPilot: NED(%.2f, %.2f, %.2f)",
-      position_target.x, position_target.y, position_target.z);
+
+  RCLCPP_INFO(this->get_logger(),
+              "Sent global waypoint to ArduPilot: Lat=%.7f, Lon=%.7f, Alt=%.2f",
+              waypoint.pose.position.latitude, waypoint.pose.position.longitude, waypoint.pose.position.altitude);
 }
 
-//=============================================================================
-// convertENUtoNED
-// Converts waypoint from ENU coordinates to NED coordinates for ArduPilot
-//=============================================================================
-/**
- * @brief Convert waypoint from ENU to NED coordinate system
- * 
- * Coordinate conversion from ROS (ENU) to ArduPilot (NED):
- * NED.x = ENU.y  (North = East)
- * NED.y = ENU.x  (East = North) 
- * NED.z = -ENU.z (Down = -Up)
- * 
- * @param enu Input waypoint in ENU coordinates
- * @param ned Output structure in NED coordinates for MAVLink
- */
-void BlueROVBridge::convertENUtoNED(const geometry_msgs::msg::PoseStamped& enu, 
-                                   mavlink_set_position_target_local_ned_t& ned)
-{
-  // Clear the structure
-  memset(&ned, 0, sizeof(ned));
-  
-  // Set header information
-  ned.time_boot_ms = static_cast<uint32_t>(this->now().nanoseconds() / 1000000);
-  ned.target_system = target_system_;
-  ned.target_component = target_component_;
-  ned.coordinate_frame = MAV_FRAME_LOCAL_NED;
-  
-  // Create mask for position only (ignore velocity, acceleration, yaw and yaw rate)
-  // Each bit set to 1 means "ignore this dimension"
-  //ned.type_mask = 0b0000001111000000;
-  //ned.type_mask = 0b000111100000;
-  ned.type_mask = 0b0000001110000000;
-  
-  // Convert ENU to NED coordinates
-  ned.x = enu.pose.position.y;  // North = East (ENU.y -> NED.x)
-  ned.y = enu.pose.position.x;  // East = North (ENU.x -> NED.y)
-  ned.z = -enu.pose.position.z; // Down = -Up (negative ENU.z -> NED.z)
-  ned.yaw = calculateYaw(enu);
-  
-  // Set velocities and accelerations to zero (not used with the defined type_mask)
-  ned.vx = 0.0f;
-  ned.vy = 0.0f;
-  ned.vz = 0.0f;
-  ned.afx = 0.0f;
-  ned.afy = 0.0f;
-  ned.afz = 0.0f;
-  //ned.yaw = 0.0f;
-  ned.yaw_rate = 0.0f;
-}
 
-double BlueROVBridge::calculateYaw(const geometry_msgs::msg::PoseStamped &waypoint) {
-  double waypoint_ned_x = waypoint.pose.position.y;   // NED.x = ENU.y
-  double waypoint_ned_y = waypoint.pose.position.x;   // NED.y = ENU.x
+double BlueROVBridge::calculateYaw(const geographic_msgs::msg::GeoPoseStamped &waypoint) {
+    // Coordinate del waypoint in latitudine e longitudine
+    double lat2 = waypoint.pose.position.latitude;  // Latitudine del waypoint
+    double lon2 = waypoint.pose.position.longitude;  // Longitudine del waypoint
 
-  // calculate difference between waypoint and current position
-  double dx = waypoint_ned_x - poseActual_[0]; 
-  double dy = waypoint_ned_y - poseActual_[1];
+    // Coordinate attuali (poseActual_ contiene latitudine e longitudine)
+    double lat1 = poseActual_[0];  // Latitudine attuale
+    double lon1 = poseActual_[1];  // Longitudine attuale
 
-  // desired yaw
-  double desired_yaw = std::atan2(dy, dx);
+    // Conversione delle latitudini e longitudini da gradi a radianti
+    lat1 = lat1 * M_PI / 180.0;
+    lon1 = lon1 * M_PI / 180.0;
+    lat2 = lat2 * M_PI / 180.0;
+    lon2 = lon2 * M_PI / 180.0;
 
-  return desired_yaw;
+    // Calcolare la differenza in longitudine
+    double dLon = lon2 - lon1;
+
+    // Calcolare il numeratore e il denominatore per l'azimut (yaw)
+    double y = sin(dLon) * cos(lat2);
+    double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dLon);
+
+    // Calcolare il yaw (direzione dell'angolo rispetto alla verticale)
+    double desired_yaw = std::atan2(y, x);
+
+    return desired_yaw;
 }

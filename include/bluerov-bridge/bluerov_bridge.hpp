@@ -9,6 +9,8 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"         // For waypoint poses
 #include "nav_msgs/msg/path.hpp"                     // For path of waypoints
 #include "std_msgs/msg/bool.hpp"                     // For waypoint reached notification
+#include "geographic_msgs/msg/geo_pose_stamped.hpp"
+#include "geographic_msgs/msg/geo_path.hpp"
 
 // We will use Eigen for the NED->ENU transform
 #include <Eigen/Dense>
@@ -24,7 +26,6 @@ extern "C" {
 #include <unistd.h>
 #include <queue>                                     // For waypoint queue
 
-#include <visualization_msgs/msg/marker.hpp>
 /**
  * @brief A ROS 2 node that interfaces with ArduPilot/BlueROV using MAVLink protocol.
  *
@@ -57,8 +58,8 @@ private:
 
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr velocity_sub_;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr kcl_state_sub_;
-    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr waypoint_sub_;
-    rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr path_sub_;
+    rclcpp::Subscription<geographic_msgs::msg::GeoPoseStamped>::SharedPtr waypoint_sub_;
+    //rclcpp::Subscription<geographic_msgs::msg::GeoPath>::SharedPtr path_sub_;
 
     //--------------------------------------------------------------------------
     // Timers
@@ -117,10 +118,10 @@ private:
     //--------------------------------------------------------------------------
     
     /// Queue of waypoints (stored in ENU coordinates)
-    std::queue<geometry_msgs::msg::PoseStamped> waypoint_queue_;
+    std::queue<geographic_msgs::msg::GeoPoseStamped> waypoint_queue_;
     
     /// Current waypoint being navigated to (ENU coordinates)
-    geometry_msgs::msg::PoseStamped current_waypoint_;
+    geographic_msgs::msg::GeoPoseStamped current_waypoint_;
     
     /// Waypoint navigation state
     bool waypoint_navigation_active_{false}; // Actively following waypoints
@@ -137,7 +138,7 @@ private:
     
     /// Position hold at last waypoint when queue is empty
     bool position_hold_active_{false};              // Vehicle is in POSHOLD mode
-    geometry_msgs::msg::PoseStamped position_hold_waypoint_; // Position being held
+    geographic_msgs::msg::GeoPoseStamped position_hold_waypoint_; // Position being held
 
     //--------------------------------------------------------------------------
     // Internal Methods
@@ -175,7 +176,7 @@ private:
     /**
      * @brief Process single waypoint requests
      */
-    void waypointCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
+    void waypointCallback(const geographic_msgs::msg::GeoPoseStamped::SharedPtr msg);
     
     /**
      * @brief Process path (multiple waypoints) requests
@@ -210,12 +211,7 @@ private:
     /**
      * @brief Send waypoint to ArduSub in NED coordinates
      */
-    void sendWaypointToArdupilot(const geometry_msgs::msg::PoseStamped& waypoint);
-    
-    /**
-     * @brief Convert from ENU to NED coordinate system
-     */
-    void convertENUtoNED(const geometry_msgs::msg::PoseStamped& enu, mavlink_set_position_target_local_ned_t& ned);
+    void sendWaypointToArdupilot(const geographic_msgs::msg::GeoPoseStamped& waypoint);
 
     /**
      * @brief Set ArduSub to POSHOLD mode for position maintenance
@@ -251,7 +247,9 @@ private:
      * @brief Set the update interval for MAVLink messages
      */
     void setMessageInterval(uint16_t message_id, float frequency_hz);
-    
-    double calculateYaw(const geometry_msgs::msg::PoseStamped& waypoint);
+
+    double haversineDistance(double lat1, double lon1, double lat2, double lon2);
+
+    double calculateYaw(const geographic_msgs::msg::GeoPoseStamped& waypoint);
 };
 

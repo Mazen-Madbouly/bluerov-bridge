@@ -33,6 +33,7 @@ find_package(rclcpp_lifecycle REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(mavlink REQUIRED)
+find_package(geographic_msgs REQUIRED)
 
 pkg_check_modules(LIBCONFIGPP REQUIRED libconfig++)
 
@@ -99,9 +100,10 @@ ament_target_dependencies(bluerov_bridge_node
   rclcpp_lifecycle
   nav_msgs
   mavlink
+  geographic_msgs
 )
 
-ament_target_dependencies(user_input rclcpp std_msgs geometry_msgs)
+ament_target_dependencies(user_input rclcpp std_msgs geographic_msgs)
 
 target_link_libraries(bluerov_bridge_node
   ${auv_core_helper_LIBRARIES}

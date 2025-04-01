@@ -1,6 +1,6 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
-#include "geometry_msgs/msg/pose_stamped.hpp"
+#include "geographic_msgs/msg/geo_pose_stamped.hpp"
 #include <iostream>
 #include <string>
 
@@ -11,7 +11,7 @@ public:
         mode_pub_ = this->create_publisher<std_msgs::msg::String>("auv/kcl_state", 10);
 
         // Publisher for waypoints
-        waypoint_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/auv/waypoint", 10);
+        waypoint_pub_ = this->create_publisher<geographic_msgs::msg::GeoPoseStamped>("/auv/waypoint", 10);
 
         RCLCPP_INFO(this->get_logger(), "User Input Node started.");
         showMenu();
@@ -19,7 +19,7 @@ public:
 
 private:
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr mode_pub_;
-    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr waypoint_pub_;
+    rclcpp::Publisher<geographic_msgs::msg::GeoPoseStamped>::SharedPtr waypoint_pub_;
 
     void showMenu() {
         while (rclcpp::ok()) {
@@ -76,20 +76,23 @@ private:
     }
 
     void setWaypoint() {
-        double x, y, z;
-        std::cout << "\nEnter Waypoint Coordinates (x y z): ";
-        std::cin >> x >> y >> z;
+        double lat, lon, alt;
+        std::cout << "\nEnter Waypoint Coordinates (Lat Lon Alt): ";
+        std::cin >> lat >> lon >> alt;
         std::cin.ignore();
 
-        geometry_msgs::msg::PoseStamped waypoint;
+        geographic_msgs::msg::GeoPoseStamped waypoint;
         waypoint.header.stamp = this->now();
         waypoint.header.frame_id = "world";
-        waypoint.pose.position.x = x;
-        waypoint.pose.position.y = y;
-        waypoint.pose.position.z = z;
 
+       
+        waypoint.pose.position.latitude = lat;
+        waypoint.pose.position.longitude = lon;
+        waypoint.pose.position.altitude = alt;
+
+        // Pubblica il waypoint
         waypoint_pub_->publish(waypoint);
-        RCLCPP_INFO(this->get_logger(), "Waypoint set to: (%.2f, %.2f, %.2f)", x, y, z);
+        RCLCPP_INFO(this->get_logger(), "Waypoint set: Lat=%.7f, Lon=%.7f, Alt=%.2f", lat, lon, alt);
     }
 };
 
