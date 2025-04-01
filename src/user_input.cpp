@@ -80,6 +80,7 @@ private:
         std::cout << "\nEnter Waypoint Coordinates (Lat Lon Alt): ";
         std::cin >> lat >> lon >> alt;
         std::cin.ignore();
+        // TODO: input check
 
         geographic_msgs::msg::GeoPoseStamped waypoint;
         waypoint.header.stamp = this->now();

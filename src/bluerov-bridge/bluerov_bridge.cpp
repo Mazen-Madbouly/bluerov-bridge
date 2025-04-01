@@ -324,7 +324,11 @@ void BlueROVBridge::receiveData()
   
           poseActual_[0] = pos.lat / 1e7; 
           poseActual_[1] = pos.lon / 1e7; 
-          poseActual_[2] = pos.alt / 1000.0;
+          poseActual_[2] = pos.relative_alt / 1000.0;
+
+          velocityActual_[0] = pos.vx / 100.0f; //velocity in GLOBAL_POSITION_INT is in cm/s -> converting to m/s
+          velocityActual_[1] = pos.vy / 100.0f;
+          velocityActual_[2] = pos.vz / 100.0f;
 
           if (!home_pose_set_) {
             poseHome_[0] = poseActual_[0];
@@ -1287,14 +1291,24 @@ void BlueROVBridge::sendWaypointToArdupilot(const geographic_msgs::msg::GeoPoseS
   pos_target.target_system = target_system_;
   pos_target.target_component = target_component_;
   pos_target.coordinate_frame = MAV_FRAME_GLOBAL_INT;
-
+  
+  pos_target.type_mask = 0b0000001111000000;
+  
   pos_target.lat_int = static_cast<int32_t>(waypoint.pose.position.latitude * 1e7);
   pos_target.lon_int = static_cast<int32_t>(waypoint.pose.position.longitude * 1e7);
   pos_target.alt = static_cast<float>(waypoint.pose.position.altitude);
   pos_target.yaw = calculateYaw(waypoint);
+  //pos_target.yaw = 1.5707f;
 
-  // Maschera per ignorare velocità e accelerazione
-  pos_target.type_mask = 0b0000001110000000;
+  pos_target.vx = 0.0f;
+  pos_target.vy = 0.0f;
+  pos_target.vz = 0.0f;
+  pos_target.afx = 0.0f;
+  pos_target.afy = 0.0f;
+  pos_target.afz = 0.0f;
+  //pos_target.yaw = 0.0f;
+  pos_target.yaw_rate = 0.0f;
+
 
   mavlink_msg_set_position_target_global_int_encode(
       system_id_, component_id_, &msg, &pos_target);
@@ -1308,29 +1322,29 @@ void BlueROVBridge::sendWaypointToArdupilot(const geographic_msgs::msg::GeoPoseS
 
 
 double BlueROVBridge::calculateYaw(const geographic_msgs::msg::GeoPoseStamped &waypoint) {
-    // Coordinate del waypoint in latitudine e longitudine
-    double lat2 = waypoint.pose.position.latitude;  // Latitudine del waypoint
-    double lon2 = waypoint.pose.position.longitude;  // Longitudine del waypoint
+    double lat2 = waypoint.pose.position.latitude;
+    double lon2 = waypoint.pose.position.longitude;
 
-    // Coordinate attuali (poseActual_ contiene latitudine e longitudine)
-    double lat1 = poseActual_[0];  // Latitudine attuale
-    double lon1 = poseActual_[1];  // Longitudine attuale
+    double lat1 = poseActual_[0];
+    double lon1 = poseActual_[1];
 
-    // Conversione delle latitudini e longitudini da gradi a radianti
+    // convert deg to rad
     lat1 = lat1 * M_PI / 180.0;
     lon1 = lon1 * M_PI / 180.0;
     lat2 = lat2 * M_PI / 180.0;
     lon2 = lon2 * M_PI / 180.0;
 
-    // Calcolare la differenza in longitudine
+    // longitude difference
     double dLon = lon2 - lon1;
 
-    // Calcolare il numeratore e il denominatore per l'azimut (yaw)
+    // azimut
     double y = sin(dLon) * cos(lat2);
     double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dLon);
 
-    // Calcolare il yaw (direzione dell'angolo rispetto alla verticale)
+    // desired yaw
     double desired_yaw = std::atan2(y, x);
+
+    RCLCPP_INFO(this->get_logger(), "Calculated desired yaw: yaw=%.5f. Actual yaw = %.5f", desired_yaw, poseActual_[5]);
 
     return desired_yaw;
 }
