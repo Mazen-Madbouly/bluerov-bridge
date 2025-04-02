@@ -130,6 +130,7 @@ private:
     bool mode_change_requested_{false};      // Mode change has been requested
     rclcpp::Time mode_change_request_time_{}; // Time of last mode change request
     uint32_t mode_change_attempts_{0};       // Number of mode change attempts
+    std::string requested_mode_{};           // The mode that was requested
     
     /// Waypoint acceptance radius (meters)
     double waypoint_acceptance_radius_{0.1};
@@ -197,11 +198,6 @@ private:
     bool isWaypointReached();
     
     /**
-     * @brief Engage position hold mode
-     */
-    void positionHold();
-    
-    /**
      * @brief Set ArduSub to GUIDED mode for waypoint navigation
      */
     void setGuidedMode();
@@ -218,11 +214,34 @@ private:
 
     /**
      * @brief Set ArduSub to POSHOLD mode for position maintenance
+     * 
+     * This method:
+     * 1. Sends the SET_MODE command to ArduSub with custom_mode=16 (POSHOLD)
+     * 2. Updates the internal state to reflect position hold is active
+     * 3. Disables waypoint navigation and guided mode
+     * 4. Stores the current position for reference
+     * 
+     * Position hold mode is used after completing waypoints to maintain position.
      */
     void setPosHoldMode();
     
     /**
+     * @brief Set flight mode without changing arm state
+     * 
+     * This method sets the vehicle flight mode without changing the arming state.
+     * It supports these modes: "MANUAL", "STABILIZE", "ALT_HOLD", "GUIDED", "POSHOLD"
+     * 
+     * @param mode The desired flight mode
+     */
+    void setFlightMode(const std::string& mode);
+    
+    /**
      * @brief Arm the vehicle in specified mode
+     * 
+     * Sends command to arm the vehicle. If mode is not empty and not "CURRENT",
+     * it will also set the vehicle to the specified mode after arming.
+     * 
+     * @param mode The desired flight mode after arming (empty or "CURRENT" to keep current mode)
      */
     void arm(const std::string& mode = "MANUAL");
     
