@@ -251,5 +251,7 @@ private:
     double haversineDistance(double lat1, double lon1, double lat2, double lon2);
 
     double calculateYaw(const geographic_msgs::msg::GeoPoseStamped& waypoint);
+
+    void sendYawCondition(float target_yaw);
 };
 

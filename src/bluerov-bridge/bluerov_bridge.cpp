@@ -324,7 +324,7 @@ void BlueROVBridge::receiveData()
   
           poseActual_[0] = pos.lat / 1e7; 
           poseActual_[1] = pos.lon / 1e7; 
-          poseActual_[2] = pos.relative_alt / 1000.0;
+          poseActual_[2] = pos.alt / 1000.0;
 
           velocityActual_[0] = pos.vx / 100.0f; //velocity in GLOBAL_POSITION_INT is in cm/s -> converting to m/s
           velocityActual_[1] = pos.vy / 100.0f;
@@ -1282,31 +1282,31 @@ void BlueROVBridge::sendWaypointToArdupilot(const geographic_msgs::msg::GeoPoseS
                 "Cannot send waypoint yet; no autopilot heartbeat discovered!");
     return;
   }
-
+  
   mavlink_message_t msg;
   mavlink_set_position_target_global_int_t pos_target;
-
+  
   memset(&pos_target, 0, sizeof(pos_target));
-
+  
   pos_target.target_system = target_system_;
   pos_target.target_component = target_component_;
   pos_target.coordinate_frame = MAV_FRAME_GLOBAL_INT;
   
-  pos_target.type_mask = 0b0000001111000000;
+  //pos_target.type_mask = 0b0000001111000000;
+  pos_target.type_mask = 0b0000000111000000;
   
   pos_target.lat_int = static_cast<int32_t>(waypoint.pose.position.latitude * 1e7);
   pos_target.lon_int = static_cast<int32_t>(waypoint.pose.position.longitude * 1e7);
   pos_target.alt = static_cast<float>(waypoint.pose.position.altitude);
-  pos_target.yaw = calculateYaw(waypoint);
-  //pos_target.yaw = 1.5707f;
-
+  
+  
   pos_target.vx = 0.0f;
   pos_target.vy = 0.0f;
   pos_target.vz = 0.0f;
   pos_target.afx = 0.0f;
   pos_target.afy = 0.0f;
   pos_target.afz = 0.0f;
-  //pos_target.yaw = 0.0f;
+  pos_target.yaw = 0.0f;
   pos_target.yaw_rate = 0.0f;
 
 
@@ -1315,9 +1315,14 @@ void BlueROVBridge::sendWaypointToArdupilot(const geographic_msgs::msg::GeoPoseS
 
   sendMavlinkMessage(msg);
 
+  
   RCLCPP_INFO(this->get_logger(),
               "Sent global waypoint to ArduPilot: Lat=%.7f, Lon=%.7f, Alt=%.2f",
               waypoint.pose.position.latitude, waypoint.pose.position.longitude, waypoint.pose.position.altitude);
+  
+  float target_yaw = calculateYaw(waypoint);
+
+  sendYawCondition(target_yaw); 
 }
 
 
@@ -1342,9 +1347,50 @@ double BlueROVBridge::calculateYaw(const geographic_msgs::msg::GeoPoseStamped &w
     double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dLon);
 
     // desired yaw
-    double desired_yaw = std::atan2(y, x);
+    double desired_yaw = std::atan2(y, x) *180/M_PI;
 
-    RCLCPP_INFO(this->get_logger(), "Calculated desired yaw: yaw=%.5f. Actual yaw = %.5f", desired_yaw, poseActual_[5]);
+    RCLCPP_INFO(this->get_logger(), "Calculated desired yaw: yaw=%.5f. Actual yaw = %.5f", desired_yaw, poseActual_[5]*180/M_PI);
 
     return desired_yaw;
+}
+
+void BlueROVBridge::sendYawCondition(float target_yaw) {
+  mavlink_message_t msg;
+  mavlink_command_long_t yaw_cmd;
+
+  memset(&yaw_cmd, 0, sizeof(yaw_cmd));
+
+  // normalize target yaw between 0° and 360°
+  while (target_yaw < 0) target_yaw += 360.0f;
+  while (target_yaw >= 360) target_yaw -= 360.0f;
+
+  // get current yaw
+  float current_yaw = poseActual_[5] * (180.0 / M_PI); // Converte rad → gradi
+  while (current_yaw < 0) current_yaw += 360.0f;
+  while (current_yaw >= 360) current_yaw -= 360.0f;
+
+  // calculate shortest path
+  float delta_yaw = target_yaw - current_yaw;
+  if (delta_yaw > 180.0f) {
+      delta_yaw -= 360.0f;
+  } else if (delta_yaw < -180.0f) {
+      delta_yaw += 360.0f;
+  }
+
+  // set direction: 1 = clockwise, -1 = counterclockwise
+  float direction = (delta_yaw >= 0) ? 1.0f : -1.0f;
+
+  yaw_cmd.target_system = target_system_;
+  yaw_cmd.target_component = target_component_;
+  yaw_cmd.command = MAV_CMD_CONDITION_YAW;
+  yaw_cmd.confirmation = 0;
+  yaw_cmd.param1 = target_yaw;  
+  yaw_cmd.param2 = 300.0f;  // rotatation velocity in deg/s
+  yaw_cmd.param3 = direction;
+  yaw_cmd.param4 = 0.0f;   // no waiting time
+
+  mavlink_msg_command_long_encode(system_id_, component_id_, &msg, &yaw_cmd);
+  sendMavlinkMessage(msg);
+
+  RCLCPP_INFO(this->get_logger(), "Sent MAV_CMD_CONDITION_YAW: %.2f degrees", yaw_cmd.param1);
 }
