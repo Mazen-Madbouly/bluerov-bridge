@@ -1131,6 +1131,7 @@ void BlueROVBridge::processNextWaypoint()
   // Send the waypoint to ArduPilot
   current_waypoint_ = waypoint_queue_.front();  // Get the next waypoint from the queue
   waypoint_queue_.pop();                        // Remove the waypoint from the queue
+  yaw_aligned_ = false;
   sendWaypointToArdupilot(current_waypoint_);   // Send the waypoint to ArduPilot
   
   // Update state
@@ -1282,6 +1283,35 @@ void BlueROVBridge::sendWaypointToArdupilot(const geographic_msgs::msg::GeoPoseS
                 "Cannot send waypoint yet; no autopilot heartbeat discovered!");
     return;
   }
+
+  // execute yaw control only if not aligned
+  if (!yaw_aligned_) {  
+    float delta_yaw;
+    float target_yaw = calculateYaw(waypoint);
+    
+    auto start_time = std::chrono::steady_clock::now();
+    const auto timeout_duration = std::chrono::seconds(5);  // Timeout
+
+    do {
+        float current_yaw = poseActual_[5] * (180.0 / M_PI);
+        while (current_yaw < 0) current_yaw += 360.0f;
+        while (current_yaw >= 360) current_yaw -= 360.0f;
+
+        delta_yaw = target_yaw - current_yaw;
+        if (delta_yaw > 180.0f) delta_yaw -= 360.0f;
+        if (delta_yaw < -180.0f) delta_yaw += 360.0f;
+
+        sendYawCondition(target_yaw);
+
+        RCLCPP_INFO(this->get_logger(), "Waiting for yaw alignment... Yaw=%.2f°", delta_yaw);
+    } while (std::abs(delta_yaw) > 5.0f &&
+             std::chrono::steady_clock::now() - start_time < timeout_duration);
+    
+    if(std::abs(delta_yaw) > 5.0f){
+      yaw_aligned_ = true;
+      RCLCPP_INFO(this->get_logger(), "Yaw alignment complete"); 
+    }
+  }
   
   mavlink_message_t msg;
   mavlink_set_position_target_global_int_t pos_target;
@@ -1319,10 +1349,6 @@ void BlueROVBridge::sendWaypointToArdupilot(const geographic_msgs::msg::GeoPoseS
   RCLCPP_INFO(this->get_logger(),
               "Sent global waypoint to ArduPilot: Lat=%.7f, Lon=%.7f, Alt=%.2f",
               waypoint.pose.position.latitude, waypoint.pose.position.longitude, waypoint.pose.position.altitude);
-  
-  float target_yaw = calculateYaw(waypoint);
-
-  sendYawCondition(target_yaw); 
 }
 
 
@@ -1385,7 +1411,7 @@ void BlueROVBridge::sendYawCondition(float target_yaw) {
   yaw_cmd.command = MAV_CMD_CONDITION_YAW;
   yaw_cmd.confirmation = 0;
   yaw_cmd.param1 = target_yaw;  
-  yaw_cmd.param2 = 300.0f;  // rotatation velocity in deg/s
+  yaw_cmd.param2 = 90.0f;  // rotatation velocity in deg/s
   yaw_cmd.param3 = direction;
   yaw_cmd.param4 = 0.0f;   // no waiting time
 

@@ -253,5 +253,6 @@ private:
     double calculateYaw(const geographic_msgs::msg::GeoPoseStamped& waypoint);
 
     void sendYawCondition(float target_yaw);
+    bool yaw_aligned_ = false;
 };
 
